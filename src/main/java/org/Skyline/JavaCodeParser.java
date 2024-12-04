@@ -81,4 +81,16 @@ public class JavaCodeParser {
 
         return maxComplexity;
     }
+
+    // Must add inheritance depth
+    // Average lines per method
+    // Identify package
+    // Identify associations
+    // Class cohesion?
+
+    // Method to take class and spit out ModelAttributes: (TO DO)
+    public static ModelAttributes generateModelAttributes(String code){
+        return new ModelAttributes();
+    }
+
 }
