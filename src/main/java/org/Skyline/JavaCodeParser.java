@@ -3,6 +3,7 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.ForStmt;
@@ -82,15 +83,105 @@ public class JavaCodeParser {
         return maxComplexity;
     }
 
-    // Must add inheritance depth
-    // Average lines per method
-    // Identify package
-    // Identify associations
-    // Class cohesion?
+    // Method to calculate the average lines of code per method
+    public static double calculateAverageLinesPerMethod(String code) {
+        JavaParser parser = new JavaParser();
+        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
 
-    // Method to take class and spit out ModelAttributes: (TO DO)
+        List<MethodDeclaration> methods = cu.findAll(MethodDeclaration.class);
+        if (methods.isEmpty()) return 0;
+
+        int totalLines = 0;
+        for (MethodDeclaration method : methods) {
+            totalLines += method.getRange().map(range -> range.end.line - range.begin.line + 1).orElse(0);
+        }
+        return (double) totalLines / methods.size();
+    }
+
+    // Method to calculate the inheritance depth of the class
+    public static int calculateInheritanceDepth(String code) {
+        JavaParser parser = new JavaParser();
+        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
+
+        ClassOrInterfaceDeclaration classDecl = cu.findFirst(ClassOrInterfaceDeclaration.class).orElseThrow();
+        int depth = 0;
+        while (!classDecl.getExtendedTypes().isEmpty()) {
+            depth++;
+            classDecl = cu.findFirst(ClassOrInterfaceDeclaration.class).orElseThrow();
+        }
+        return depth;
+    }
+
+    // Method to identify the package the class is part of
+    public static String identifyPackage(String code) {
+        JavaParser parser = new JavaParser();
+        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
+
+        return cu.getPackageDeclaration().map(pkg -> pkg.getNameAsString()).orElse("No package");
+    }
+
+    // Method to calculate class cohesion (a rough measure based on methods using fields)
+    public static double calculateClassCohesion(String code) {
+        JavaParser parser = new JavaParser();
+        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
+
+        List<FieldDeclaration> fields = cu.findAll(FieldDeclaration.class);
+        List<MethodDeclaration> methods = cu.findAll(MethodDeclaration.class);
+
+        int methodUsingFields = 0;
+        for (MethodDeclaration method : methods) {
+            for (FieldDeclaration field : fields) {
+                if (method.findAll(com.github.javaparser.ast.expr.FieldAccessExpr.class).stream()
+                        .anyMatch(expr -> expr.getNameAsString().equals(field.getVariables().get(0).getNameAsString()))) {
+                    methodUsingFields++;
+                    break;
+                }
+            }
+        }
+
+        return methods.isEmpty() ? 0 : (double) methodUsingFields / methods.size();
+    }
+
+    public static int calculateNumberOfImports(String code) {
+        return 0; // incomplete
+    }
+
+    public static int calculateNumberOfAssociations(String code) {
+        return 0; // incomplete
+    }
+
+    // Must find associations still
+
+    // Method to take class and spit out ModelAttributes
     public static ModelAttributes generateModelAttributes(String code){
-        return new ModelAttributes();
+        if (isValidClass(code)){
+
+            ModelAttributes attributes = new ModelAttributes();
+
+            attributes.setLinesOfCode(countLinesIncludingComments(code));
+
+            attributes.setLinesOfCodeNoBlanks(countLinesOfCode(code));
+
+            attributes.setNumberOfFields(countFields(code));
+
+            attributes.setNumberOfMethods(countMethods(code));
+
+            attributes.setMaxCyclomaticComplexity(calculateMaximumCyclomaticComplexity(code));
+
+            attributes.setInheritanceDepth(calculateInheritanceDepth(code));
+
+            attributes.setClassPackage(identifyPackage(code));
+
+            attributes.setAverageLinesPerMethod(calculateAverageLinesPerMethod(code));
+
+            attributes.setNumberOfAssociations(calculateNumberOfAssociations(code));
+
+            attributes.setNumberOfImports(calculateNumberOfImports(code));
+
+            return attributes;
+        }
+
+        throw new IllegalArgumentException("Not a valid class!");
     }
 
 }

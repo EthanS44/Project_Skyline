@@ -15,6 +15,7 @@ public class ModelAttributes {
     private int linesOfCodeNoBlanks = 0;
     private int numberOfFields = 0;
     private int numberOfMethods = 0;
+    private double averageLinesPerMethod = 0;
     private int maxCyclomaticComplexity = 0;
     private int inheritanceDepth = 0;
     private int numberOfAssociations = 0;
@@ -107,6 +108,14 @@ public class ModelAttributes {
 
     public void setClassPackage(String classPackage) {
         this.classPackage = classPackage;
+    }
+
+    public double getAverageLinesPerMethod() {
+        return averageLinesPerMethod;
+    }
+
+    public void setAverageLinesPerMethod(double averageLinesPerMethod) {
+        this.averageLinesPerMethod = averageLinesPerMethod;
     }
 
     /*
