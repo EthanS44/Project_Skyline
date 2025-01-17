@@ -14,9 +14,31 @@ import java.util.ArrayList;
 import static javafx.application.Application.launch;
 
 public class Renderer extends Application {
+
+
+    //camera values
+    private final double rotationAmount = 5.0; // Rotation increment in degrees
+    private final double moveAmount = 20.0; // Movement increment
+    private double cameraAngleX = 0; // Pitch
+    private double cameraAngleY = 0; // Yaw
+
+    //group values
+    private double groupAngleX = 0; // Pitch
+    private double groupAngleY = 0; // Yaw
+    private final double groupRotationAmount = 5.0; // Rotation increment in degrees
+    private final double groupMoveAmount = 10.0; // Movement increment
+
     @Override
     public void start(Stage primaryStage){
         // ArrayList<ModelAttributes> attributesList = getAttributes();
+
+        Box road = new Box(1500, 50, 0);
+        PhongMaterial material3 = new PhongMaterial();
+        material3.setDiffuseColor(Color.GRAY);
+        road.setMaterial(material3); // Apply material
+
+        road.setTranslateX(650);
+        road.setTranslateY(400);
 
         /*Sphere box = new Sphere(300); // Create a box
         PhongMaterial material = new PhongMaterial();
