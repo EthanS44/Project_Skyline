@@ -153,10 +153,10 @@ public class JavaCodeParser {
     // Must find associations still
 
     // Method to take class and spit out ModelAttributes
-    public static ModelAttributes generateModelAttributes(String code){
+    public static Attributes generateModelAttributes(String code){
         if (isValidClass(code)){
 
-            ModelAttributes attributes = new ModelAttributes();
+            Attributes attributes = new Attributes();
 
             attributes.setLinesOfCode(countLinesIncludingComments(code));
 

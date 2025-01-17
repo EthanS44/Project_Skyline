@@ -2,11 +2,8 @@ package org.Skyline;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
-public class ModelAttributes {
+public class Attributes {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
@@ -29,10 +26,10 @@ public class ModelAttributes {
     private List<String> imports = new ArrayList<String>();
     */
 
-    public ModelAttributes(String user){
+    public Attributes(String user){
         this.user = user;
     }
-    public ModelAttributes(){}
+    public Attributes(){}
 
     public String getUser() {
         return user;
