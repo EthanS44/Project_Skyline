@@ -7,6 +7,7 @@ public class Attributes {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
+    private String name = null;
     private String user = null;
     private int linesOfCode = 0;
     private int linesOfCodeNoBlanks = 0;
@@ -34,6 +35,10 @@ public class Attributes {
     public String getUser() {
         return user;
     }
+
+    public String getName() {return name;}
+
+    public void setName(String name){this.name = name;}
 
     public int getLinesOfCode() {
         return linesOfCode;
@@ -114,6 +119,26 @@ public class Attributes {
     public void setAverageLinesPerMethod(double averageLinesPerMethod) {
         this.averageLinesPerMethod = averageLinesPerMethod;
     }
+
+    @Override
+    public String toString() {
+        return "Attributes{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", user='" + user + '\'' +
+                ", linesOfCode=" + linesOfCode +
+                ", linesOfCodeNoBlanks=" + linesOfCodeNoBlanks +
+                ", numberOfFields=" + numberOfFields +
+                ", numberOfMethods=" + numberOfMethods +
+                ", averageLinesPerMethod=" + averageLinesPerMethod +
+                ", maxCyclomaticComplexity=" + maxCyclomaticComplexity +
+                ", inheritanceDepth=" + inheritanceDepth +
+                ", numberOfAssociations=" + numberOfAssociations +
+                ", numberOfImports=" + numberOfImports +
+                ", classPackage='" + classPackage + '\'' +
+                '}';
+    }
+
 
     /*
     public List<String> getAssociations() {

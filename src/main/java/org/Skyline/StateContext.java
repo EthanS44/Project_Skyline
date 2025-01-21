@@ -30,11 +30,11 @@ public class StateContext {
         return currentUser;
     }
 
-    public void setSelectedModel(String selectedModel){
+    public void setSelectedModel(Model selectedModel){
         this.selectedModel = selectedModel;
     }
 
-    public String getSelectedModel(){
+    public Model getSelectedModel(){
         return selectedModel;
     }
 

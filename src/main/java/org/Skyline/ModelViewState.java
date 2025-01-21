@@ -5,6 +5,7 @@ public class ModelViewState implements State {
 
     public ModelViewState(StateContext context) {
         this.context = context;
+        primaryStage = new Stage();
     }
 
     @Override

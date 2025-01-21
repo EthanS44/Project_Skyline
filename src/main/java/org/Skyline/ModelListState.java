@@ -7,22 +7,24 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 
+import java.util.List;
+
 public class ModelListState implements State {
     private StateContext context;
-    private ListView<String> modelListView;
-    private ObservableList<String> modelList;
+    private ListView<Model> modelListView;
+    private ObservableList<Model> modelList;
+    private ModelRepository modelRepository;
+
 
     public ModelListState(StateContext context) {
         this.context = context;
-        modelList = FXCollections.observableArrayList(
-                "GoodModel.java", "BetterModel.java", "CoolModel.java" // Example model names
-        );
+        modelList = FXCollections.observableArrayList(modelRepository.findByUser(context.getCurrentUser()));
     }
 
     @Override
     public void showUI() {
         // Create ListView to display models
-        modelListView = new ListView<>(modelList);
+        modelListView = new ListView<Model>(modelList);
         modelListView.getSelectionModel().selectFirst(); // Select the first model by default
 
         // Create buttons for actions
@@ -58,7 +60,7 @@ public class ModelListState implements State {
             }
         } else if (action.equals("deleteModel")) {
             // Handle model deletion logic
-            String selectedModel = modelListView.getSelectionModel().getSelectedItem();
+            Model selectedModel = modelListView.getSelectionModel().getSelectedItem();
             if (selectedModel != null) {
                 System.out.println("Deleting model: " + selectedModel);
                 modelList.remove(selectedModel); // Remove the selected model from the list
