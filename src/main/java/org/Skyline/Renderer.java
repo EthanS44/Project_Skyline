@@ -13,6 +13,7 @@ import java.util.ArrayList;
 
 import static javafx.application.Application.launch;
 
+// WE WON"T NEED THIS SOON
 public class Renderer extends Application {
 
 
@@ -28,9 +29,14 @@ public class Renderer extends Application {
     private final double groupRotationAmount = 5.0; // Rotation increment in degrees
     private final double groupMoveAmount = 10.0; // Movement increment
 
+    private StateContext context;
+
     @Override
     public void start(Stage primaryStage){
-        // ArrayList<ModelAttributes> attributesList = getAttributes();
+        context = new StateContext(primaryStage);
+        context.setState(new LoginState(context));
+
+
 
         Box road = new Box(1500, 50, 0);
         PhongMaterial material3 = new PhongMaterial();
@@ -40,21 +46,10 @@ public class Renderer extends Application {
         road.setTranslateX(650);
         road.setTranslateY(400);
 
-        /*Sphere box = new Sphere(300); // Create a box
-        PhongMaterial material = new PhongMaterial();
-        material.setDiffuseColor(Color.LIMEGREEN);
-        box.setMaterial(material); // Apply material*/
+        // Logic to display every building
+        //Model model =
+        int pixelCount = 0;
 
-        /*Box box2 = new Box(200, 200, 200);
-        PhongMaterial material2 = new PhongMaterial();
-        material2.setDiffuseColor(Color.BLUEVIOLET);
-        box2.setMaterial(material2);*/
-
-        /*box.setTranslateX(650);
-        box.setTranslateY(400);
-
-        box2.setTranslateX(150);
-        box2.setTranslateY(400);*/
 
         PointLight light = new PointLight();
         light.setTranslateX(150);
@@ -77,6 +72,9 @@ public class Renderer extends Application {
         primaryStage.show();
     }
 
+    public static void setUp(){
+
+    }
     private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
         switch (event.getCode()) {
             case W:

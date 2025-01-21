@@ -2,7 +2,6 @@ package org.Skyline;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
-
 public class SkylineApp extends Application {
     private StateContext context;
 

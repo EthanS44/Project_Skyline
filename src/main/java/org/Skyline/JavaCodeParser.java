@@ -150,6 +150,15 @@ public class JavaCodeParser {
         return 0; // incomplete
     }
 
+    public static String findClassName(String code) {
+        JavaParser parser = new JavaParser();
+        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
+
+        ClassOrInterfaceDeclaration classDecl = cu.findFirst(ClassOrInterfaceDeclaration.class)
+                .orElseThrow();
+        return classDecl.getNameAsString();
+    }
+
     // Must find associations still
 
     // Method to take class and spit out ModelAttributes
@@ -157,6 +166,8 @@ public class JavaCodeParser {
         if (isValidClass(code)){
 
             Attributes attributes = new Attributes();
+
+            attributes.setName(findClassName(code));
 
             attributes.setLinesOfCode(countLinesIncludingComments(code));
 

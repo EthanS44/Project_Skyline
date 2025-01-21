@@ -6,7 +6,10 @@ public class StateContext {
     private State currentState;
     private Stage primaryStage;
     private String currentUser;
-    private String selectedModel;
+    private Model selectedModel;
+    private String xParameter;
+    private String yParameter;
+    private String zParameter;
 
 
     public StateContext(Stage primaryStage) {
@@ -42,5 +45,17 @@ public class StateContext {
         if (currentState != null) {
             currentState.handleAction(action);
         }
+    }
+
+    public String getxParameter() {
+        return xParameter;
+    }
+
+    public String getyParameter() {
+        return yParameter;
+    }
+
+    public String getzParameter() {
+        return zParameter;
     }
 }
