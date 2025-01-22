@@ -31,14 +31,16 @@ public class ModelListState implements State {
         Button viewButton = new Button("View Model");
         Button deleteButton = new Button("Delete Model");
         Button sortButton = new Button("Sort Models");
+        Button newButton = new Button("New Model");
 
         // Set button actions
         viewButton.setOnAction(event -> handleAction("viewModel"));
         deleteButton.setOnAction(event -> handleAction("deleteModel"));
         sortButton.setOnAction(event -> handleAction("sortModels"));
+        newButton.setOnAction(event -> handleAction("newModel"));
 
         // Add ListView and buttons to the layout
-        VBox layout = new VBox(10, modelListView, viewButton, deleteButton, sortButton);
+        VBox layout = new VBox(10, modelListView, viewButton, deleteButton, sortButton, newButton);
         layout.setStyle("-fx-padding: 20px; -fx-alignment: center;");
 
         // Create the scene and set it on the primaryStage
@@ -69,6 +71,9 @@ public class ModelListState implements State {
             // Handle sorting logic
             modelList.sort(String::compareTo); // Sort models alphabetically
             System.out.println("Models sorted");
+        } else if (action.equals("newModel")) {
+            // Handle new model logic
+            context.setState(new NewModelState(context, context.getModelRepository()));
         }
     }
 }

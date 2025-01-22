@@ -38,7 +38,7 @@ public class MainMenuState implements State {
     public void handleAction(String action) {
         if (action.equals("goToModelList")) {
             // Transition to ModelListState
-            context.setState(new ModelListState(context));
+            context.setState(new ModelListState(context, context.getModelRepository()));
         } else if (action.equals("openSettings")) {
             // Transition to SettingsState
             context.setState(new SettingsState(context));

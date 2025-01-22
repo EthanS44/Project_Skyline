@@ -1,4 +1,4 @@
-package org.Skyline;
+/*package org.Skyline;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -161,10 +161,10 @@ public class Renderer extends Application {
         );
     }
 
-    /*
+
     private ArrayList<Attributes> getAttributes(long attributeID){
         return new ArrayList<Attributes>();
-    } */
+    }
 
     private Box attributesToBuilding(Attributes attributes, String xParameter, String yParameter, String zParameter){
         Box newBox = new Box();
@@ -205,3 +205,5 @@ public class Renderer extends Application {
         launch(args);
     }
 }
+
+ */
