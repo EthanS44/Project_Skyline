@@ -32,9 +32,9 @@ public class Model {
     @Override
     public String toString() {return name;}
 
-    /*
-    @Override
-    public String toString() {
+
+
+    public String showAttributes() {
         StringBuilder sb = new StringBuilder();
         sb.append("Model{")
                 .append("id=").append(id)
@@ -51,6 +51,6 @@ public class Model {
         return sb.toString();
     }
 
-     */
+
 
 }

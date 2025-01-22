@@ -57,6 +57,8 @@ public class PackageParser {
         }
 
         // Create the model and return it
-        return new Model(packageName, attributesList.get(0).getUser(), attributesList);
+        Model newModel = new Model(packageName, attributesList.get(0).getUser(), attributesList);
+        System.out.println(newModel.showAttributes());
+        return newModel;
     }
 }
