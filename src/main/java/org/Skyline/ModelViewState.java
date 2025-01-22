@@ -1,15 +1,16 @@
 package org.Skyline;
 
 import javafx.application.Application;
-import javafx.scene.Group;
-import javafx.scene.PerspectiveCamera;
-import javafx.scene.PointLight;
-import javafx.scene.Scene;
+import javafx.scene.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
+import javafx.scene.shape.CullFace;
+import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 
 import java.util.Random;
@@ -26,6 +27,8 @@ public class ModelViewState extends Application implements State {
     private double groupAngleY = 0;
     private final double groupRotationAmount = 5.0;
     private final double groupMoveAmount = 10.0;
+
+    private final double roadWidth = 600;
 
     private StateContext context;
     private Stage primaryStage;
@@ -65,18 +68,30 @@ public class ModelViewState extends Application implements State {
     }
 
     private void setUp() {
-        Box road = new Box(1500, 0, 200);
-        PhongMaterial material3 = new PhongMaterial();
-        material3.setDiffuseColor(Color.GRAY);
-        road.setMaterial(material3);
+        Box road = new Box(1500, 0, roadWidth);
+        Image roadTexture = new Image("road_texture.jpg");
+        PhongMaterial roadMaterial = new PhongMaterial();
+        roadMaterial.setDiffuseMap(roadTexture);
+        road.getTransforms().add(new Scale(1, 1, 1));
+        road.setMaterial(roadMaterial);
+        road.setScaleX(10);
+        road.setScaleY(1);
+        road.setScaleZ(1);
+
+        Box grass = new Box(10000, 0, 10000);
+        //Image grassTexture = new Image("grass_texture.jpg");
+        PhongMaterial grassMaterial = new PhongMaterial();
+        grassMaterial.setDiffuseColor(Color.DARKGREEN);
+        grass.setMaterial(grassMaterial);
 
         road.setTranslateX(0);
-        road.setTranslateY(0);
+        road.setTranslateY(-1);
 
         PointLight light = new PointLight();
         light.setTranslateX(150);
         light.setTranslateY(-700);
         light.setTranslateZ(-1000);
+        AmbientLight ambientLight = new AmbientLight(Color.WHITE);
 
         PerspectiveCamera camera = new PerspectiveCamera();
         camera.setTranslateY(-900);
@@ -84,7 +99,15 @@ public class ModelViewState extends Application implements State {
         camera.setTranslateZ(-750);
         cameraAngleX = -10;
 
-        root = new Group(road, light);
+        Sphere skybox = new Sphere(10000);
+        Image skyboxTexture = new Image("sky_texture.jpg");
+        PhongMaterial skyMaterial = new PhongMaterial();
+        skyMaterial.setDiffuseMap(skyboxTexture);
+        skybox.setMaterial(skyMaterial);
+        // Invert sphere so can be seen from inside
+        skybox.setCullFace(CullFace.FRONT);  // Render the inside of the sphere
+
+        root = new Group(road, skybox, grass, light, ambientLight);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
@@ -124,7 +147,7 @@ public class ModelViewState extends Application implements State {
             root.getChildren().add(attributeBox);
 
             attributeBox.setTranslateX(currentXPixel + 650);
-            attributeBox.setTranslateZ(120 + (attributeBox.getDepth()/2));
+            attributeBox.setTranslateZ(roadWidth/2 + 20 + (attributeBox.getDepth()/2));
             attributeBox.setTranslateY(0 - (attributeBox.getHeight()/2));
 
             currentXPixel += (int) (attributeBox.getWidth() + moveAmount);
@@ -156,6 +179,7 @@ public class ModelViewState extends Application implements State {
                 new Rotate(groupAngleX, Rotate.X_AXIS),
                 new Rotate(groupAngleY, Rotate.Y_AXIS)
         );
+
     }
 
     private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
