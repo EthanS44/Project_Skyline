@@ -1,12 +1,16 @@
 package org.Skyline;
 
+import jakarta.annotation.PostConstruct;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class ModelListState implements State {
@@ -16,10 +20,19 @@ public class ModelListState implements State {
     private ModelRepository modelRepository;
 
 
-    public ModelListState(StateContext context) {
+    public ModelListState(StateContext context, ModelRepository modelRepository) {
         this.context = context;
+        //this.modelRepository = modelRepository;
+        this.modelList = FXCollections.observableArrayList(context.getModelList());
+    }
+
+    /*
+    @PostConstruct
+    public void init() {
         modelList = FXCollections.observableArrayList(modelRepository.findByUser(context.getCurrentUser()));
     }
+
+     */
 
     @Override
     public void showUI() {
@@ -69,7 +82,7 @@ public class ModelListState implements State {
             }
         } else if (action.equals("sortModels")) {
             // Handle sorting logic
-            modelList.sort(String::compareTo); // Sort models alphabetically
+            FXCollections.sort(modelList, Comparator.comparing(Model::getName));
             System.out.println("Models sorted");
         } else if (action.equals("newModel")) {
             // Handle new model logic

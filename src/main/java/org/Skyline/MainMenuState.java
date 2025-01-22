@@ -2,6 +2,7 @@ package org.Skyline;
 
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 public class MainMenuState implements State {
@@ -17,6 +18,7 @@ public class MainMenuState implements State {
         Button modelListButton = new Button("Model List");
         Button settingsButton = new Button("Settings");
         Button helpButton = new Button("Help");
+        Label userLabel = new Label("Logged in as: " + context.getCurrentUser());
 
         // Set button actions
         modelListButton.setOnAction(event -> handleAction("goToModelList"));
@@ -24,7 +26,7 @@ public class MainMenuState implements State {
         helpButton.setOnAction(event -> handleAction("openHelp"));
 
         // Add buttons to the layout
-        VBox menuLayout = new VBox(10, modelListButton, settingsButton, helpButton);
+        VBox menuLayout = new VBox(10, modelListButton, settingsButton, helpButton, userLabel);
         menuLayout.setStyle("-fx-padding: 20px; -fx-alignment: center;");
 
         // Create the scene and set it on the primaryStage

@@ -12,6 +12,8 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Stage;
 
+import java.util.Random;
+
 public class ModelViewState extends Application implements State {
     // Camera values
     private final double rotationAmount = 5.0;
@@ -58,24 +60,30 @@ public class ModelViewState extends Application implements State {
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         setUp();
+        addBuildings();
         showRenderer();
     }
 
     private void setUp() {
-        Box road = new Box(1500, 50, 0);
+        Box road = new Box(1500, 0, 200);
         PhongMaterial material3 = new PhongMaterial();
         material3.setDiffuseColor(Color.GRAY);
         road.setMaterial(material3);
 
-        road.setTranslateX(650);
-        road.setTranslateY(400);
+        road.setTranslateX(0);
+        road.setTranslateY(0);
 
         PointLight light = new PointLight();
         light.setTranslateX(150);
-        light.setTranslateY(400);
+        light.setTranslateY(-700);
         light.setTranslateZ(-1000);
 
         PerspectiveCamera camera = new PerspectiveCamera();
+        camera.setTranslateY(-900);
+        camera.setTranslateX(-450);
+        camera.setTranslateZ(-750);
+        cameraAngleX = -10;
+
         root = new Group(road, light);
 
         // Assign scene to the class-level variable
@@ -94,16 +102,32 @@ public class ModelViewState extends Application implements State {
         String yParameter = context.getyParameter();
         String zParameter = context.getzParameter();
 
+        PhongMaterial buildingMaterial;
+        Random random = new Random();
+
         int currentXPixel = 0;
         int currentZPixel = 0;
 
         for (Attributes attribute: model.getAttributesList()){
-            int xSize = getAttributeFromString(xParameter, attribute);
-            int ySize = getAttributeFromString(yParameter, attribute);
-            int zSize = getAttributeFromString(zParameter, attribute);
-            Box attributeBox = new Box(xSize, ySize, zSize);
 
-            // add box to the root
+            // set random color for building
+            buildingMaterial = new PhongMaterial();
+            double red = random.nextDouble();   // Random value between 0.0 and 1.0
+            double green = random.nextDouble(); // Random value between 0.0 and 1.0
+            double blue = random.nextDouble();  // Random value between 0.0 and 1.0
+            buildingMaterial.setDiffuseColor(new Color(red, green, blue, 1.0));
+
+            Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
+
+            attributeBox.setMaterial(buildingMaterial);
+
+            root.getChildren().add(attributeBox);
+
+            attributeBox.setTranslateX(currentXPixel + 650);
+            attributeBox.setTranslateZ(120 + (attributeBox.getDepth()/2));
+            attributeBox.setTranslateY(0 - (attributeBox.getHeight()/2));
+
+            currentXPixel += (int) (attributeBox.getWidth() + moveAmount);
         }
     }
 
@@ -158,9 +182,9 @@ public class ModelViewState extends Application implements State {
     private Box attributesToBuilding(Attributes attributes, String xParameter, String yParameter, String zParameter){
         Box newBox = new Box();
 
-        newBox.setWidth(getAttributeFromString(xParameter, attributes));
-        newBox.setDepth(getAttributeFromString(zParameter, attributes));
-        newBox.setHeight(getAttributeFromString(yParameter, attributes));
+        newBox.setWidth(getAttributeFromString(xParameter, attributes) * 10);
+        newBox.setDepth(getAttributeFromString(zParameter, attributes) * 10);
+        newBox.setHeight(getAttributeFromString(yParameter, attributes) * 10);
 
         return newBox;
     }

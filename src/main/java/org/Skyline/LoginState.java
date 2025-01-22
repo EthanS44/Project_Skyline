@@ -10,6 +10,7 @@ public class LoginState implements State {
     private StateContext context;
     private String username;
     private String password;
+    private Label errorLabel;
 
     public LoginState(StateContext context) {
         this.context = context;
@@ -32,10 +33,10 @@ public class LoginState implements State {
 
         // Create login and guest buttons
         Button loginButton = new Button("Login");
-        Button guestButton = new Button("Guest Login");
+        Button registerButton = new Button("Register");
 
         // Error message label (hidden initially)
-        Label errorLabel = new Label();
+        errorLabel = new Label();
         errorLabel.setStyle("-fx-text-fill: red;");
         errorLabel.setVisible(false);
 
@@ -45,14 +46,14 @@ public class LoginState implements State {
             password = passwordField.getText();
             context.executeAction("login");
         });
-        guestButton.setOnAction(event -> {
+        registerButton.setOnAction(event -> {
             username = usernameField.getText();
             password = passwordField.getText();
-            context.executeAction("guestLogin");
+            context.executeAction("register");
         });
 
         // Add all UI elements to the layout
-        loginLayout.getChildren().addAll(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, guestButton, errorLabel);
+        loginLayout.getChildren().addAll(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, registerButton, errorLabel);
 
         // Assuming the Stage is handled by StateContext or elsewhere
         Scene loginScene = new Scene(loginLayout, 400, 300);
@@ -66,22 +67,30 @@ public class LoginState implements State {
         // Handle login or guest login actions
         if ("login".equals(action)) {
             try {
-                PasswordManagement.verifyUser(username, password);
+                if (PasswordManagement.verifyUser(username, password)) {
+                    context.setUser(username);
+                    context.setState(new MainMenuState(context));
+                } else {
+                    errorLabel.setText("Incorrect username or password.");
+                    errorLabel.setVisible(true);
+                }
             } catch (IOException e) {
                 System.out.println("Error: Unable to retrieve password.");
             }
 
-            context.setUser(username);
-            context.setState(new MainMenuState(context));
-        } else if ("guestLogin".equals(action)) {
+        } else if ("register".equals(action)) {
             try {
                 PasswordManagement.registerUser(username, password);
+                context.setUser(username);
+                context.setState(new MainMenuState(context));
+
             } catch (IOException e) {
                 System.out.println("Error: Unable to create user.");
-            }
 
-            context.setUser(username);
-            context.setState(new MainMenuState(context));
+            } catch (IllegalArgumentException e) {
+                errorLabel.setText("Username already exists.");
+                errorLabel.setVisible(true);
+            }
         }
     }
 }
