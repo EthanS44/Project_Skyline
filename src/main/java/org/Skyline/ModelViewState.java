@@ -99,10 +99,9 @@ public class ModelViewState extends Application implements State {
         AmbientLight ambientLight = new AmbientLight(Color.WHITE);
 
         PerspectiveCamera camera = new PerspectiveCamera();
-        camera.setTranslateY(-900);
+        camera.setTranslateY(-500);
         camera.setTranslateX(-450);
-        camera.setTranslateZ(-750);
-        cameraAngleX = -10;
+        camera.setTranslateZ(1150);
 
         Sphere skybox = new Sphere(10000);
         Image skyboxTexture = new Image("sky_texture.jpg");
@@ -135,27 +134,34 @@ public class ModelViewState extends Application implements State {
 
         int currentXPixel = 0;
         int currentZPixel = 0;
+        int previousBuildingWidth = 0;
 
         for (Attributes attribute: model.getAttributesList()){
 
-            // set random color for building
+            // set random greyscale shade for building
             buildingMaterial = new PhongMaterial();
+            double minShade = 0.0;   // Black
+            double maxShade = 0.30;  // Light gray (where 1.0 would be white)
+
+            double shade = minShade + (random.nextDouble() * (maxShade - minShade));
+            /*
+            uncomment this for random color instead
             double red = random.nextDouble();   // Random value between 0.0 and 1.0
             double green = random.nextDouble(); // Random value between 0.0 and 1.0
             double blue = random.nextDouble();  // Random value between 0.0 and 1.0
-            buildingMaterial.setDiffuseColor(new Color(red, green, blue, 1.0));
-
+            */
+            buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
-
             attributeBox.setMaterial(buildingMaterial);
-
             root.getChildren().add(attributeBox);
 
-            attributeBox.setTranslateX(currentXPixel + 650);
+
             attributeBox.setTranslateZ(roadWidth/2 + 20 + (attributeBox.getDepth()/2));
             attributeBox.setTranslateY(0 - (attributeBox.getHeight()/2));
 
-            currentXPixel += (int) (attributeBox.getWidth() + moveAmount);
+            currentXPixel += attributeBox.getWidth() + previousBuildingWidth;
+            attributeBox.setTranslateX(currentXPixel);
+            previousBuildingWidth = (int) attributeBox.getWidth();
         }
     }
 
