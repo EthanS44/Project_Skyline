@@ -18,9 +18,12 @@ import java.util.Random;
 public class ModelViewState extends Application implements State {
     // Camera values
     private final double rotationAmount = 5.0;
-    private final double moveAmount = 20.0;
+    private final double moveAmount = 60.0;
     private double cameraAngleX = 0;
     private double cameraAngleY = 0;
+    private double cameraPosX = 0;
+    private double cameraPosY = 0;
+    private double cameraPosZ = 0;
 
     // Group values
     private double groupAngleX = 0;
@@ -72,6 +75,7 @@ public class ModelViewState extends Application implements State {
         Image roadTexture = new Image("road_texture.jpg");
         PhongMaterial roadMaterial = new PhongMaterial();
         roadMaterial.setDiffuseMap(roadTexture);
+        roadMaterial.setSpecularMap(roadTexture);
         road.getTransforms().add(new Scale(1, 1, 1));
         road.setMaterial(roadMaterial);
         road.setScaleX(10);
@@ -82,6 +86,7 @@ public class ModelViewState extends Application implements State {
         //Image grassTexture = new Image("grass_texture.jpg");
         PhongMaterial grassMaterial = new PhongMaterial();
         grassMaterial.setDiffuseColor(Color.DARKGREEN);
+        grassMaterial.setSpecularColor(Color.DARKGREEN);
         grass.setMaterial(grassMaterial);
 
         road.setTranslateX(0);
@@ -183,66 +188,76 @@ public class ModelViewState extends Application implements State {
     }
 
     private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
+        // Initialize the camera variables based on the camera's current position
+        cameraPosX = camera.getTranslateX();
+        cameraPosY = camera.getTranslateY();
+        cameraPosZ = camera.getTranslateZ();
+
+        // Calculate direction vectors based on camera's rotation (yaw)
+        double forwardX = Math.sin(Math.toRadians(cameraAngleY));
+        double forwardZ = -Math.cos(Math.toRadians(cameraAngleY));
+        double rightX = Math.cos(Math.toRadians(cameraAngleY));
+        double rightZ = Math.sin(Math.toRadians(cameraAngleY));
+
+        // Use switch statement to handle key events
         switch (event.getCode()) {
-            case S -> {
-                // Calculate the forward vector
-                double forwardX = -Math.sin(Math.toRadians(cameraAngleY)) * Math.cos(Math.toRadians(cameraAngleX));
-                double forwardY = Math.sin(Math.toRadians(cameraAngleX));
-                double forwardZ = Math.cos(Math.toRadians(cameraAngleY)) * Math.cos(Math.toRadians(cameraAngleX));
-
-                // Move the camera along the forward vector
-                camera.setTranslateX(camera.getTranslateX() + forwardX * moveAmount);
-                camera.setTranslateY(camera.getTranslateY() + forwardY * moveAmount);
-                camera.setTranslateZ(camera.getTranslateZ() + forwardZ * moveAmount);
-            }
-            case W -> {
-                // Calculate the forward vector
-                double forwardX = -Math.sin(Math.toRadians(cameraAngleY)) * Math.cos(Math.toRadians(cameraAngleX));
-                double forwardY = Math.sin(Math.toRadians(cameraAngleX));
-                double forwardZ = Math.cos(Math.toRadians(cameraAngleY)) * Math.cos(Math.toRadians(cameraAngleX));
-
-                // Move the camera backward (opposite to forward vector)
-                camera.setTranslateX(camera.getTranslateX() - forwardX * moveAmount);
-                camera.setTranslateY(camera.getTranslateY() - forwardY * moveAmount);
-                camera.setTranslateZ(camera.getTranslateZ() - forwardZ * moveAmount);
-            }
-            case D -> {
-                // Calculate the right vector (left is the negative of the right vector)
-                double rightX = Math.cos(Math.toRadians(cameraAngleY));
-                double rightZ = Math.sin(Math.toRadians(cameraAngleY));
-
-                // Move the camera left
-                camera.setTranslateX(camera.getTranslateX() - rightX * moveAmount);
-                camera.setTranslateZ(camera.getTranslateZ() - rightZ * moveAmount);
-            }
-            case A -> {
-                // Calculate the right vector
-                double rightX = Math.cos(Math.toRadians(cameraAngleY));
-                double rightZ = Math.sin(Math.toRadians(cameraAngleY));
-
-                // Move the camera right
-                camera.setTranslateX(camera.getTranslateX() + rightX * moveAmount);
-                camera.setTranslateZ(camera.getTranslateZ() + rightZ * moveAmount);
-            }
-            case Q -> camera.setTranslateY(camera.getTranslateY() - moveAmount); // Move down
-            case E -> camera.setTranslateY(camera.getTranslateY() + moveAmount); // Move up
-            case UP -> {
-                cameraAngleX -= rotationAmount; // Rotate up
-                updateCameraRotation(camera);
-            }
-            case DOWN -> {
-                cameraAngleX += rotationAmount; // Rotate down
-                updateCameraRotation(camera);
-            }
-            case LEFT -> {
-                cameraAngleY -= rotationAmount; // Rotate left
-                updateCameraRotation(camera);
-            }
-            case RIGHT -> {
-                cameraAngleY += rotationAmount; // Rotate right
-                updateCameraRotation(camera);
-            }
+            case W:
+                // Move forward (relative to camera facing direction)
+                cameraPosX += forwardX * moveAmount;
+                cameraPosZ -= forwardZ * moveAmount;
+                break;
+            case S:
+                // Move backward (relative to camera facing direction)
+                cameraPosX -= forwardX * moveAmount;
+                cameraPosZ += forwardZ * moveAmount;
+                break;
+            case A:
+                // Strafe left (relative to camera facing direction)
+                cameraPosX -= rightX * moveAmount;
+                cameraPosZ += rightZ * moveAmount;
+                break;
+            case D:
+                // Strafe right (relative to camera facing direction)
+                cameraPosX += rightX * moveAmount;
+                cameraPosZ -= rightZ * moveAmount;
+                break;
+            case UP:
+                // Move up along the Y-axis
+                cameraPosY -= moveAmount;
+                break;
+            case DOWN:
+                // Move down along the Y-axis
+                cameraPosY += moveAmount;
+                break;
+            case LEFT:
+                // Rotate left (along the Y-axis)
+                cameraAngleY -= rotationAmount;
+                break;
+            case RIGHT:
+                // Rotate right (along the Y-axis)
+                cameraAngleY += rotationAmount;
+                break;
+            default:
+                break;
         }
+
+        // Apply camera position transformations
+        camera.setTranslateX(cameraPosX);
+        camera.setTranslateY(cameraPosY);
+        camera.setTranslateZ(cameraPosZ);
+
+        // Create new rotation transforms based on the accumulated rotation angles
+        Rotate rotateX = new Rotate(cameraAngleX, Rotate.X_AXIS);  // Rotate along X-axis (up/down)
+        Rotate rotateY = new Rotate(cameraAngleY, Rotate.Y_AXIS);  // Rotate along Y-axis (left/right)
+
+        // Compound rotation (local space adjustment)
+        double rollAngle = -Math.sin(Math.toRadians(cameraAngleY)) * cameraAngleX; // Adjust Z-axis based on yaw
+        Rotate rotateRoll = new Rotate(rollAngle, Rotate.Z_AXIS); // Roll adjustment
+
+
+        // Clear previous rotations and apply new ones
+        camera.getTransforms().clear();  // Optional: clear only if needed
+        camera.getTransforms().addAll(rotateX, rotateY);
     }
 
     private void updateCameraRotation(PerspectiveCamera camera) {
