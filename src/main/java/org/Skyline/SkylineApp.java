@@ -15,15 +15,17 @@ public class SkylineApp extends Application {
         context = new StateContext(primaryStage);
 
         // Set the initial state (LoginState)
-        //context.setState(new LoginState(context));
+        context.setState(new LoginState(context));
 
 
         //for testing, uncomment the code below
+        /*
         PackageParser packageParser = new PackageParser();
-        //Model model = packageParser.parsePackage("com.example.models");
         Model model = packageParser.parsePackage("ElevatorSimulator");
         context.setSelectedModel(model);
         context.setState(new ModelViewState(context));
+
+         */
 
 
     }

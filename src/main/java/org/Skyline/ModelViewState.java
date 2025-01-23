@@ -18,7 +18,7 @@ import java.util.Random;
 public class ModelViewState extends Application implements State {
     // Camera values
     private final double rotationAmount = 5.0;
-    private final double moveAmount = 60.0;
+    private final double moveAmount = 120;
     private double cameraAngleX = 0;
     private double cameraAngleY = 0;
     private double cameraPosX = 0;
@@ -31,7 +31,7 @@ public class ModelViewState extends Application implements State {
     private final double groupRotationAmount = 5.0;
     private final double groupMoveAmount = 10.0;
 
-    private final double roadWidth = 600;
+    private final double roadWidth = 400;
 
     private StateContext context;
     private Stage primaryStage;
@@ -71,6 +71,7 @@ public class ModelViewState extends Application implements State {
     }
 
     private void setUp() {
+        // Road setup
         Box road = new Box(1500, 0, roadWidth);
         Image roadTexture = new Image("road_texture.jpg");
         PhongMaterial roadMaterial = new PhongMaterial();
@@ -82,16 +83,27 @@ public class ModelViewState extends Application implements State {
         road.setScaleY(1);
         road.setScaleZ(1);
 
-        Box grass = new Box(10000, 0, 10000);
-        //Image grassTexture = new Image("grass_texture.jpg");
+        // Grass setup
+        Box grass = new Box(20000, 0, 20000);
         PhongMaterial grassMaterial = new PhongMaterial();
         grassMaterial.setDiffuseColor(Color.DARKGREEN);
         grassMaterial.setSpecularColor(Color.DARKGREEN);
         grass.setMaterial(grassMaterial);
 
-        road.setTranslateX(0);
-        road.setTranslateY(-1);
+        // Concrete pad setup
+        Box concretePad = new Box(20000, 0, roadWidth * 3); // Same length as road, 3x wider, small height
+        PhongMaterial concreteMaterial = new PhongMaterial();
+        concreteMaterial.setDiffuseColor(Color.rgb(0, 50, 0));
+        concreteMaterial.setSpecularColor(Color.rgb(0, 50, 0));
+        concretePad.setMaterial(concreteMaterial);
+        concretePad.setTranslateY(-0.5); // Slightly lower than the road
+        concretePad.setTranslateX(road.getTranslateX()); // Align with the road
+        concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
 
+        // Position road on top of the concrete pad
+        road.setTranslateY(-2);
+
+        // Lights and camera
         PointLight light = new PointLight();
         light.setTranslateX(150);
         light.setTranslateY(-700);
@@ -101,21 +113,26 @@ public class ModelViewState extends Application implements State {
         PerspectiveCamera camera = new PerspectiveCamera();
         camera.setTranslateY(-500);
         camera.setTranslateX(-450);
-        camera.setTranslateZ(1150);
+        camera.setTranslateZ(500);
 
+        // Skybox setup
         Sphere skybox = new Sphere(10000);
         Image skyboxTexture = new Image("sky_texture.jpg");
         PhongMaterial skyMaterial = new PhongMaterial();
         skyMaterial.setDiffuseMap(skyboxTexture);
         skybox.setMaterial(skyMaterial);
-        // Invert sphere so can be seen from inside
-        skybox.setCullFace(CullFace.FRONT);  // Render the inside of the sphere
+        skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
-        root = new Group(road, skybox, grass, light, ambientLight);
+        root = new Group(road, skybox, grass, concretePad, light, ambientLight);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
         scene.setCamera(camera);
+
+        // set camera start angle
+        cameraAngleY += 90;
+        Rotate rotateY = new Rotate(90, Rotate.Y_AXIS);
+        camera.getTransforms().add(rotateY);
 
         //move camera
         scene.setOnKeyPressed(event -> handleCameraMovement(event, camera));
@@ -132,15 +149,20 @@ public class ModelViewState extends Application implements State {
         PhongMaterial buildingMaterial;
         Random random = new Random();
 
-        int currentXPixel = 0;
+        int currentXPixel = -5000;
         int currentZPixel = 0;
         int previousBuildingWidth = 0;
+        int spacing = 400; // spacing between buildings
+        boolean sideOfRoad = false;
 
         for (Attributes attribute: model.getAttributesList()){
 
+            if (sideOfRoad){sideOfRoad = false;}
+            else{sideOfRoad = true;}
+
             // set random greyscale shade for building
             buildingMaterial = new PhongMaterial();
-            double minShade = 0.0;   // Black
+            double minShade = 0.05;   // Dark Grey
             double maxShade = 0.30;  // Light gray (where 1.0 would be white)
 
             double shade = minShade + (random.nextDouble() * (maxShade - minShade));
@@ -151,15 +173,21 @@ public class ModelViewState extends Application implements State {
             double blue = random.nextDouble();  // Random value between 0.0 and 1.0
             */
             buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
+            buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
             attributeBox.setMaterial(buildingMaterial);
             root.getChildren().add(attributeBox);
 
 
-            attributeBox.setTranslateZ(roadWidth/2 + 20 + (attributeBox.getDepth()/2));
+            // put buildings on alternating sides of road
+            if(sideOfRoad){
+                attributeBox.setTranslateZ(roadWidth/2 + 20 + (attributeBox.getDepth()/2));}
+            else{
+                attributeBox.setTranslateZ(-(roadWidth/2 + 20 + (attributeBox.getDepth()/2)));
+            }
             attributeBox.setTranslateY(0 - (attributeBox.getHeight()/2));
 
-            currentXPixel += attributeBox.getWidth() + previousBuildingWidth;
+            currentXPixel += attributeBox.getWidth() + previousBuildingWidth + spacing;
             attributeBox.setTranslateX(currentXPixel);
             previousBuildingWidth = (int) attributeBox.getWidth();
         }
@@ -233,6 +261,9 @@ public class ModelViewState extends Application implements State {
                 break;
             case DOWN:
                 // Move down along the Y-axis
+                if(cameraPosY + moveAmount > -500){
+                    break;
+                }
                 cameraPosY += moveAmount;
                 break;
             case LEFT:
@@ -309,4 +340,5 @@ public class ModelViewState extends Application implements State {
         }
     }
 }
+
 
