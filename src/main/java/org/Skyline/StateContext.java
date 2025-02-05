@@ -56,6 +56,30 @@ public class StateContext {
         this.primaryStage = primaryStage;
     }
 
+    public void setXParameter(String xParameter) {
+        this.xParameter = xParameter;
+    }
+
+    public void setYParameter(String yParameter) {
+        this.yParameter = yParameter;
+    }
+
+    public void setZParameter(String zParameter) {
+        this.zParameter = zParameter;
+    }
+
+    public void setXParameterThreshold(int xParameterThreshold) {
+        this.xParameterThreshold = xParameterThreshold;
+    }
+
+    public void setYParameterThreshold(int yParameterThreshold) {
+        this.yParameterThreshold = yParameterThreshold;
+    }
+
+    public void setZParameterThreshold(int zParameterThreshold) {
+        this.zParameterThreshold = zParameterThreshold;
+    }
+
     public ArrayList<Model> getModelList(){
         return modelList;
     }

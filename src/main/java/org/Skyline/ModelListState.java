@@ -67,6 +67,9 @@ public class ModelListState implements State {
     public void handleAction(String action) {
         if (action.equals("viewModel")) {
             // Handle model view logic
+            // Open window for user to set parameters and thresholds
+            new ViewModelWindow(context).show();
+            // Transition to view model state
             context.setSelectedModel(modelListView.getSelectionModel().getSelectedItem());
             if (context.getSelectedModel() != null) {
                 System.out.println("Viewing model: " + context.getSelectedModel());

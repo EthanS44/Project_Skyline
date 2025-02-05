@@ -24,6 +24,10 @@ public class Model {
         return name;
     }
 
+    public void setUser(String user){
+        this.user = user;
+    }
+
     public List<Attributes> getAttributesList(){
         return AttributesList;
     }

@@ -1,4 +1,4 @@
-/*package org.Skyline;
+package org.Skyline;
 
 import javafx.application.Application;
 import javafx.scene.*;
@@ -16,162 +16,261 @@ import static javafx.application.Application.launch;
 // WE WON"T NEED THIS SOON
 public class Renderer extends Application {
 
-
-    //camera values
-    private final double rotationAmount = 5.0; // Rotation increment in degrees
-    private final double moveAmount = 20.0; // Movement increment
-    private double cameraAngleX = 0; // Pitch
-    private double cameraAngleY = 0; // Yaw
-
-    //group values
-    private double groupAngleX = 0; // Pitch
-    private double groupAngleY = 0; // Yaw
-    private final double groupRotationAmount = 5.0; // Rotation increment in degrees
-    private final double groupMoveAmount = 10.0; // Movement increment
-
-    private StateContext context;
-
     @Override
-    public void start(Stage primaryStage){
-        context = new StateContext(primaryStage);
-        context.setState(new LoginState(context));
+    public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        setUp();
+        addBuildings();
+        showRenderer();
+    }
 
+    private void setUp() {
+        // Road setup
+        Box road = new Box(1500, 0, roadWidth);
+        Image roadTexture = new Image("road_texture.jpg");
+        PhongMaterial roadMaterial = new PhongMaterial();
+        roadMaterial.setDiffuseMap(roadTexture);
+        roadMaterial.setSpecularMap(roadTexture);
+        road.getTransforms().add(new Scale(1, 1, 1));
+        road.setMaterial(roadMaterial);
+        road.setScaleX(10);
+        road.setScaleY(1);
+        road.setScaleZ(1);
 
+        // Grass setup
+        Box grass = new Box(20000, 0, 20000);
+        PhongMaterial grassMaterial = new PhongMaterial();
+        grassMaterial.setDiffuseColor(Color.DARKGREEN);
+        grassMaterial.setSpecularColor(Color.DARKGREEN);
+        grass.setMaterial(grassMaterial);
 
-        Box road = new Box(1500, 50, 0);
-        PhongMaterial material3 = new PhongMaterial();
-        material3.setDiffuseColor(Color.GRAY);
-        road.setMaterial(material3); // Apply material
+        // Concrete pad setup
+        Box concretePad = new Box(20000, 0, roadWidth * 3); // Same length as road, 3x wider, small height
+        PhongMaterial concreteMaterial = new PhongMaterial();
+        concreteMaterial.setDiffuseColor(Color.rgb(0, 50, 0));
+        concreteMaterial.setSpecularColor(Color.rgb(0, 50, 0));
+        concretePad.setMaterial(concreteMaterial);
+        concretePad.setTranslateY(-0.5); // Slightly lower than the road
+        concretePad.setTranslateX(road.getTranslateX()); // Align with the road
+        concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
 
-        road.setTranslateX(650);
-        road.setTranslateY(400);
+        // Position road on top of the concrete pad
+        road.setTranslateY(-2);
 
-        // Logic to display every building
-        //Model model =
-        int pixelCount = 0;
-
-
+        // Lights and camera
         PointLight light = new PointLight();
         light.setTranslateX(150);
-        light.setTranslateY(400);
+        light.setTranslateY(-700);
         light.setTranslateZ(-1000);
+        AmbientLight ambientLight = new AmbientLight(Color.WHITE);
 
         PerspectiveCamera camera = new PerspectiveCamera();
-        Group root = new Group(road, light);
-        Scene scene = new Scene(root, 1000, 800, true); // Enable 3D
+        camera.setTranslateY(-500);
+        camera.setTranslateX(-450);
+        camera.setTranslateZ(500);
+
+        // Skybox setup
+        Sphere skybox = new Sphere(10000);
+        Image skyboxTexture = new Image("sky_texture.jpg");
+        PhongMaterial skyMaterial = new PhongMaterial();
+        skyMaterial.setDiffuseMap(skyboxTexture);
+        skybox.setMaterial(skyMaterial);
+        skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
+
+        root = new Group(road, skybox, grass, concretePad, light, ambientLight);
+
+        // Assign scene to the class-level variable
+        scene = new Scene(root, 1000, 800, true);
         scene.setCamera(camera);
 
+        // set camera start angle
+        cameraAngleY += 90;
+        Rotate rotateY = new Rotate(90, Rotate.Y_AXIS);
+        camera.getTransforms().add(rotateY);
+
         //move camera
-        //scene.setOnKeyPressed(event -> handleCameraMovement(event, camera));
+        scene.setOnKeyPressed(event -> handleCameraMovement(event, camera));
 
-        //move group
-        scene.setOnKeyPressed(event -> handleGroupMovement(event, root));
+        //scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
+    }
+
+    private void addBuildings(){
+        Model model = context.getSelectedModel();
+        String xParameter = context.getxParameter();
+        String yParameter = context.getyParameter();
+        String zParameter = context.getzParameter();
+
+        PhongMaterial buildingMaterial;
+        Random random = new Random();
+
+        int currentXPixel = -5000;
+        int currentZPixel = 0;
+        int previousBuildingWidth = 0;
+        int spacing = 400; // spacing between buildings
+        boolean sideOfRoad = false;
+
+        for (Attributes attribute: model.getAttributesList()){
+
+            if (sideOfRoad){sideOfRoad = false;}
+            else{sideOfRoad = true;}
+
+            // set random greyscale shade for building
+            buildingMaterial = new PhongMaterial();
+            double minShade = 0.05;   // Dark Grey
+            double maxShade = 0.30;  // Light gray (where 1.0 would be white)
+
+            double shade = minShade + (random.nextDouble() * (maxShade - minShade));
+            /*
+            uncomment this for random color instead
+            double red = random.nextDouble();   // Random value between 0.0 and 1.0
+            double green = random.nextDouble(); // Random value between 0.0 and 1.0
+            double blue = random.nextDouble();  // Random value between 0.0 and 1.0
+            */
+            buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
+            buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
+            Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
+
+            if (attributeBox.getWidth()/MULTIPLIER > context.getxParameterThreshold() || attributeBox.getHeight()/MULTIPLIER > context.getyParameterThreshold() || attributeBox.getDepth()/MULTIPLIER > context.getzParameterThreshold()){
+                buildingMaterial.setDiffuseColor(Color.DARKRED);
+                buildingMaterial.setSpecularColor(Color.DARKRED);
+            }
+
+            attributeBox.setMaterial(buildingMaterial);
+            root.getChildren().add(attributeBox);
 
 
+            // put buildings on alternating sides of road
+            if(sideOfRoad){
+                attributeBox.setTranslateZ(roadWidth/2 + 20 + (attributeBox.getDepth()/2));}
+            else{
+                attributeBox.setTranslateZ(-(roadWidth/2 + 20 + (attributeBox.getDepth()/2)));
+            }
+            attributeBox.setTranslateY(0 - (attributeBox.getHeight()/2));
+
+            currentXPixel += attributeBox.getWidth() + previousBuildingWidth + spacing;
+            attributeBox.setTranslateX(currentXPixel);
+            previousBuildingWidth = (int) attributeBox.getWidth();
+        }
+    }
+
+    private void showRenderer() {
         primaryStage.setScene(scene);
+        primaryStage.setTitle("3D Model Viewer");
         primaryStage.show();
     }
 
-    public static void setUp(){
-
-    }
-    private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
+    private void handleGroupMovement(KeyEvent event, Group group, PerspectiveCamera camera) {
         switch (event.getCode()) {
-            case W:
-                camera.translateZProperty().set(camera.getTranslateZ() + moveAmount);
-                break;
-            case S:
-                camera.translateZProperty().set(camera.getTranslateZ() - moveAmount);
-                break;
-            case A:
-                camera.translateXProperty().set(camera.getTranslateX() - moveAmount);
-                break;
-            case D:
-                camera.translateXProperty().set(camera.getTranslateX() + moveAmount);
-                break;
-            case Q:
-                camera.translateYProperty().set(camera.getTranslateY() - moveAmount);
-                break;
-            case E:
-                camera.translateYProperty().set(camera.getTranslateY() + moveAmount);
-                break;
-
-            // Rotation
-            case UP: // Pitch up
-                cameraAngleX -= rotationAmount;
-                break;
-            case DOWN: // Pitch down
-                cameraAngleX += rotationAmount;
-                break;
-            case LEFT: // Yaw left
-                cameraAngleY -= rotationAmount;
-                break;
-            case RIGHT: // Yaw right
-                cameraAngleY += rotationAmount;
-                break;
-        }
-        // Update the camera's rotation
-        camera.getTransforms().clear();
-        camera.getTransforms().addAll(
-                new Rotate(cameraAngleX, Rotate.X_AXIS),
-                new Rotate(cameraAngleY, Rotate.Y_AXIS));
-    }
-
-    private void handleGroupMovement(KeyEvent event, Group group) {
-        switch (event.getCode()) {
-            // Translation
-            case W: // Move forward
-                group.setTranslateZ(group.getTranslateZ() + moveAmount);
-                break;
-            case S: // Move backward
-                group.setTranslateZ(group.getTranslateZ() - moveAmount);
-                break;
-            case A: // Move left
-                group.setTranslateX(group.getTranslateX() - moveAmount);
-                break;
-            case D: // Move right
-                group.setTranslateX(group.getTranslateX() + moveAmount);
-                break;
-            case Q: // Move up
-                group.setTranslateY(group.getTranslateY() - moveAmount);
-                break;
-            case E: // Move down
-                group.setTranslateY(group.getTranslateY() + moveAmount);
-                break;
-
-            // Rotation
-            case UP: // Pitch up
-                groupAngleX -= rotationAmount;
-                break;
-            case DOWN: // Pitch down
-                groupAngleX += rotationAmount;
-                break;
-            case LEFT: // Yaw left
-                groupAngleY -= rotationAmount;
-                break;
-            case RIGHT: // Yaw right
-                groupAngleY += rotationAmount;
-                break;
+            case W -> group.setTranslateZ(group.getTranslateZ() + moveAmount);
+            case S -> group.setTranslateZ(group.getTranslateZ() - moveAmount);
+            case A -> group.setTranslateX(group.getTranslateX() - moveAmount);
+            case D -> group.setTranslateX(group.getTranslateX() + moveAmount);
+            case Q -> group.setTranslateY(group.getTranslateY() - moveAmount);
+            case E -> group.setTranslateY(group.getTranslateY() + moveAmount);
+            case UP -> groupAngleX -= rotationAmount;
+            case DOWN -> groupAngleX += rotationAmount;
+            case LEFT -> groupAngleY -= rotationAmount;
+            case RIGHT -> groupAngleY += rotationAmount;
         }
 
-        group.getTransforms().clear(); // Clear previous transformations
+        group.getTransforms().clear();
         group.getTransforms().addAll(
                 new Rotate(groupAngleX, Rotate.X_AXIS),
                 new Rotate(groupAngleY, Rotate.Y_AXIS)
         );
+
     }
 
+    private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
+        // Initialize the camera variables based on the camera's current position
+        cameraPosX = camera.getTranslateX();
+        cameraPosY = camera.getTranslateY();
+        cameraPosZ = camera.getTranslateZ();
 
-    private ArrayList<Attributes> getAttributes(long attributeID){
-        return new ArrayList<Attributes>();
+        // Calculate direction vectors based on camera's rotation (yaw)
+        double forwardX = Math.sin(Math.toRadians(cameraAngleY));
+        double forwardZ = -Math.cos(Math.toRadians(cameraAngleY));
+        double rightX = Math.cos(Math.toRadians(cameraAngleY));
+        double rightZ = Math.sin(Math.toRadians(cameraAngleY));
+
+        // Use switch statement to handle key events
+        switch (event.getCode()) {
+            case W:
+                // Move forward (relative to camera facing direction)
+                cameraPosX += forwardX * moveAmount;
+                cameraPosZ -= forwardZ * moveAmount;
+                break;
+            case S:
+                // Move backward (relative to camera facing direction)
+                cameraPosX -= forwardX * moveAmount;
+                cameraPosZ += forwardZ * moveAmount;
+                break;
+            case A:
+                // Strafe left (relative to camera facing direction)
+                cameraPosX -= rightX * moveAmount;
+                cameraPosZ += rightZ * moveAmount;
+                break;
+            case D:
+                // Strafe right (relative to camera facing direction)
+                cameraPosX += rightX * moveAmount;
+                cameraPosZ -= rightZ * moveAmount;
+                break;
+            case UP:
+                // Move up along the Y-axis
+                cameraPosY -= moveAmount;
+                break;
+            case DOWN:
+                // Move down along the Y-axis
+                if(cameraPosY + moveAmount > -500){
+                    break;
+                }
+                cameraPosY += moveAmount;
+                break;
+            case LEFT:
+                // Rotate left (along the Y-axis)
+                cameraAngleY -= rotationAmount;
+                break;
+            case RIGHT:
+                // Rotate right (along the Y-axis)
+                cameraAngleY += rotationAmount;
+                break;
+            default:
+                break;
+        }
+
+        // Apply camera position transformations
+        camera.setTranslateX(cameraPosX);
+        camera.setTranslateY(cameraPosY);
+        camera.setTranslateZ(cameraPosZ);
+
+        // Create new rotation transforms based on the accumulated rotation angles
+        Rotate rotateX = new Rotate(cameraAngleX, Rotate.X_AXIS);  // Rotate along X-axis (up/down)
+        Rotate rotateY = new Rotate(cameraAngleY, Rotate.Y_AXIS);  // Rotate along Y-axis (left/right)
+
+        // Compound rotation (local space adjustment)
+        double rollAngle = -Math.sin(Math.toRadians(cameraAngleY)) * cameraAngleX; // Adjust Z-axis based on yaw
+        Rotate rotateRoll = new Rotate(rollAngle, Rotate.Z_AXIS); // Roll adjustment
+
+
+        // Clear previous rotations and apply new ones
+        camera.getTransforms().clear();  // Optional: clear only if needed
+        camera.getTransforms().addAll(rotateX, rotateY);
+    }
+
+    private void updateCameraRotation(PerspectiveCamera camera) {
+        camera.getTransforms().clear();
+        camera.getTransforms().addAll(
+                new Rotate(cameraAngleX, Rotate.X_AXIS),
+                new Rotate(cameraAngleY, Rotate.Y_AXIS)
+        );
     }
 
     private Box attributesToBuilding(Attributes attributes, String xParameter, String yParameter, String zParameter){
         Box newBox = new Box();
 
-        newBox.setWidth(getAttributeFromString(xParameter, attributes));
-        newBox.setDepth(getAttributeFromString(zParameter, attributes));
-        newBox.setHeight(getAttributeFromString(yParameter, attributes));
+        newBox.setWidth(getAttributeFromString(xParameter, attributes) * MULTIPLIER);
+        newBox.setDepth(getAttributeFromString(zParameter, attributes) * MULTIPLIER);
+        newBox.setHeight(getAttributeFromString(yParameter, attributes) * MULTIPLIER);
 
         return newBox;
     }
@@ -201,9 +300,5 @@ public class Renderer extends Application {
         }
     }
 
-    public static void main(String[] args){
-        launch(args);
-    }
 }
 
- */
