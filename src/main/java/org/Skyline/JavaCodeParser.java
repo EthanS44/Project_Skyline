@@ -12,7 +12,6 @@ import com.github.javaparser.ast.stmt.SwitchStmt;
 import com.github.javaparser.ast.stmt.CatchClause;
 import java.util.List;
 public class JavaCodeParser {
-
     public static boolean isValidClass(String code) {
         try {
             JavaParser parser = new JavaParser();  // Create an instance of JavaParser

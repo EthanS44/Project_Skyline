@@ -16,9 +16,13 @@ public class StateContext {
     private String currentUser;
     private Model selectedModel;
     private ArrayList<Model> modelList;
+    private DatabaseManager databaseManager;
     private String xParameter = "NUMBEROFFIELDS";
     private String yParameter = "LINESOFCODE";
     private String zParameter = "NUMBEROFMETHODS";
+    private int xParameterThreshold = 200;
+    private int yParameterThreshold = 800;
+    private int zParameterThreshold = 200;
 
     @Autowired
     private ModelRepository modelRepository;
@@ -104,5 +108,21 @@ public class StateContext {
 
     public String getzParameter() {
         return zParameter;
+    }
+
+    public int getxParameterThreshold() {
+        return xParameterThreshold;
+    }
+
+    public int getyParameterThreshold() {
+        return yParameterThreshold;
+    }
+
+    public int getzParameterThreshold() {
+        return zParameterThreshold;
+    }
+
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
     }
 }

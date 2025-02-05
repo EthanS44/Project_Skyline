@@ -2,19 +2,47 @@ package org.Skyline;
 
 import javafx.application.Application;
 import javafx.scene.*;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
+import javafx.scene.shape.CullFace;
+import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
+import java.util.Random;
 
-import java.util.ArrayList;
 
-import static javafx.application.Application.launch;
-
-// WE WON"T NEED THIS SOON
 public class Renderer extends Application {
+
+private final double rotationAmount = 5.0;
+private final double moveAmount = 120;
+private double cameraAngleX = 0;
+private double cameraAngleY = 0;
+private double cameraPosX = 0;
+private double cameraPosY = 0;
+private double cameraPosZ = 0;
+
+// Group values
+private double groupAngleX = 0;
+private double groupAngleY = 0;
+private final double groupRotationAmount = 5.0;
+private final double groupMoveAmount = 10.0;
+
+private final double roadWidth = 400;
+
+private final int MULTIPLIER = 10;
+
+private Stage primaryStage;
+private StateContext context;
+private Scene scene;
+private Group root;
+
+    public Renderer(StateContext context){
+        this.context = context;
+    }
 
     @Override
     public void start(Stage primaryStage) {

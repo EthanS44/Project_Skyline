@@ -20,8 +20,9 @@ public class ModelViewState implements State {
 
         // JavaFX must be launched properly
         //new Thread(() -> Application.launch(ModelViewState.class)).start();
+        Renderer renderer = new Renderer(context);
 
-        start(primaryStage);
+        renderer.start(primaryStage);
     }
 
     @Override
