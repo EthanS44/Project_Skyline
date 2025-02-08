@@ -23,16 +23,11 @@ public class ModelListState implements State {
     public ModelListState(StateContext context, ModelRepository modelRepository) {
         this.context = context;
         //this.modelRepository = modelRepository;
+        DatabaseManager databaseManager = context.getDatabaseManager();
+        context.setModelList(databaseManager.getModelsByUser(context.getCurrentUser()));
         this.modelList = FXCollections.observableArrayList(context.getModelList());
     }
 
-    /*
-    @PostConstruct
-    public void init() {
-        modelList = FXCollections.observableArrayList(modelRepository.findByUser(context.getCurrentUser()));
-    }
-
-     */
 
     @Override
     public void showUI() {

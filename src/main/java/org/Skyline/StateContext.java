@@ -30,6 +30,7 @@ public class StateContext {
     public StateContext(Stage primaryStage){
         this.primaryStage = primaryStage;
         this.modelList = new ArrayList<Model>();
+        this.databaseManager = new DatabaseManager();
 
     }
 
@@ -87,6 +88,8 @@ public class StateContext {
     public ArrayList<Model> getModelList(){
         return modelList;
     }
+
+    public void setModelList(ArrayList<Model> modelList) {this.modelList = modelList;}
 
     public Model getSelectedModel(){
         return selectedModel;

@@ -79,9 +79,8 @@ public class NewModelState implements State {
         Model newModel = packageParser.parsePackage(packageName);
         newModel.setUser(context.getCurrentUser());
 
-        // Save model to repository
+        // Save model to database
         context.getDatabaseManager().saveModel(newModel);
-        context.getModelList().add(newModel);
 
         // Transition back to the Model List after processing
         context.setState(new ModelListState(context, context.getModelRepository()));

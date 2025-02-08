@@ -1,16 +1,15 @@
 CREATE TABLE Users (
                          user_id    SERIAL      PRIMARY KEY,
-                         username      VARCHAR     NOT NULL,
+                         username      VARCHAR     NOT NULL UNIQUE ,
                          password       VARCHAR     NOT NULL
 );
 
 CREATE TABLE Models (
                           model_id      SERIAL      PRIMARY KEY,
-                          model_name      VARCHAR     NOT NULL,
-                          user_id         INTEGER       NOT NULL,
-                          phone           VARCHAR     NOT NULL UNIQUE,
-                          FOREIGN KEY (user_id)
-                              REFERENCES Users (user_id)
+                          model_name      VARCHAR     NOT NULL Unique,
+                          username         VARCHAR       NOT NULL,
+                          FOREIGN KEY (username)
+                              REFERENCES Users (username)
 );
 
 CREATE TABLE Attributes (

@@ -3,11 +3,10 @@ package org.Skyline;
 import jakarta.persistence.*;
 import java.util.List;
 
-@Entity
+
 public class Model {
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
-    private long id;
+
+    private Integer id;
     private String name;
     private String user;
     private List<Attributes> AttributesList;
@@ -30,6 +29,10 @@ public class Model {
 
     public List<Attributes> getAttributesList(){
         return AttributesList;
+    }
+
+    public String getUser() {
+        return user;
     }
 
 
