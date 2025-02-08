@@ -174,4 +174,41 @@ public class DatabaseManager {
             return false; // Return false in case of an error
         }
     }
+
+    public void deleteModelByName(String modelName) {
+        String getModelIdSQL = "SELECT model_id FROM Models WHERE model_name = ?";
+        String deleteAttributesSQL = "DELETE FROM Attributes WHERE model_id = ?";
+        String deleteModelSQL = "DELETE FROM Models WHERE model_name = ?";
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement getModelIdStatement = connection.prepareStatement(getModelIdSQL);
+             PreparedStatement deleteAttributesStatement = connection.prepareStatement(deleteAttributesSQL);
+             PreparedStatement deleteModelStatement = connection.prepareStatement(deleteModelSQL)) {
+
+            // Get the model ID by name
+            getModelIdStatement.setString(1, modelName);
+            ResultSet resultSet = getModelIdStatement.executeQuery();
+
+            if (resultSet.next()) {
+                long modelId = resultSet.getLong("model_id");
+
+                // Delete attributes associated with the model
+                deleteAttributesStatement.setLong(1, modelId);
+                deleteAttributesStatement.executeUpdate();
+            }
+
+            // Delete the model itself
+            deleteModelStatement.setString(1, modelName);
+            int rowsDeleted = deleteModelStatement.executeUpdate();
+
+            if (rowsDeleted > 0) {
+                System.out.println("Model and associated attributes deleted successfully!");
+            } else {
+                System.out.println("No model found with the given name.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -18,6 +18,7 @@ public class ModelListState implements State {
     private ListView<Model> modelListView;
     private ObservableList<Model> modelList;
     private ModelRepository modelRepository;
+    private DatabaseManager databaseManager;
 
 
     public ModelListState(StateContext context, ModelRepository modelRepository) {
@@ -26,6 +27,7 @@ public class ModelListState implements State {
         DatabaseManager databaseManager = context.getDatabaseManager();
         context.setModelList(databaseManager.getModelsByUser(context.getCurrentUser()));
         this.modelList = FXCollections.observableArrayList(context.getModelList());
+        this.databaseManager = new DatabaseManager();
     }
 
 
@@ -76,6 +78,7 @@ public class ModelListState implements State {
             Model selectedModel = modelListView.getSelectionModel().getSelectedItem();
             if (selectedModel != null) {
                 System.out.println("Deleting model: " + selectedModel);
+                databaseManager.deleteModelByName(selectedModel.getName()); //delete model from the database
                 modelList.remove(selectedModel); // Remove the selected model from the list
             }
         } else if (action.equals("sortModels")) {
