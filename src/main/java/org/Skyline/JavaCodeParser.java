@@ -104,9 +104,20 @@ public class JavaCodeParser {
 
         ClassOrInterfaceDeclaration classDecl = cu.findFirst(ClassOrInterfaceDeclaration.class).orElseThrow();
         int depth = 0;
+
         while (!classDecl.getExtendedTypes().isEmpty()) {
             depth++;
-            classDecl = cu.findFirst(ClassOrInterfaceDeclaration.class).orElseThrow();
+
+            // Attempt to find the superclass in the same CompilationUnit
+            String superClassName = classDecl.getExtendedTypes().get(0).getNameAsString();
+            classDecl = cu.findAll(ClassOrInterfaceDeclaration.class).stream()
+                    .filter(c -> c.getNameAsString().equals(superClassName))
+                    .findFirst()
+                    .orElse(null);
+
+            if (classDecl == null) {
+                break; // Avoid infinite loop if superclass isn't found
+            }
         }
         return depth;
     }

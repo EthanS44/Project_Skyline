@@ -1,5 +1,7 @@
 package org.Skyline;
 
+import javafx.stage.FileChooser;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,46 +21,63 @@ public class PackageParser {
      * @return value of type "Model".
      */
 
-    public static Model parsePackage(String packageName) {
+    public static Model parsePackage(File directory, String user) {
         List<Attributes> attributesList = new ArrayList<>();
+
         try {
-            // Convert package name to directory path
-            String prefix = "src/main/java/";
-            String path = prefix + packageName.replace('.', '/');
-
-            File directory = new File(path);
-
-            // Check if the directory exists
             if (!directory.exists() || !directory.isDirectory()) {
-                System.out.println("Invalid directory for package: " + path);
+                System.out.println("Invalid directory: " + directory.getAbsolutePath());
                 return null;
             }
 
             System.out.println("Scanning directory: " + directory.getAbsolutePath());
 
-            // Iterate over all files in the package directory
-            for (File file : directory.listFiles()) {
-                if (file.getName().toLowerCase().endsWith(".java")) {
-                    // Read the Java file content
-                    String code = Files.readString(file.toPath());
-                    System.out.println("Parsing file: " + file.getName());
+            // Recursively collect Java files
+            List<File> javaFiles = getJavaFiles(directory);
 
-                    // Parse the file and generate Attributes
-                    try {
-                        Attributes attributes = JavaCodeParser.generateModelAttributes(code);
-                        attributesList.add(attributes);
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Skipping invalid class in file: " + file.getName());
-                    }
+            if (javaFiles.isEmpty()) {
+                System.out.println("No Java files found.");
+                return null;
+            }
+
+            for (File file : javaFiles) {
+                try {
+                    String code = Files.readString(file.toPath());
+                    System.out.println("Parsing file: " + file.getAbsolutePath());
+
+                    Attributes attributes = JavaCodeParser.generateModelAttributes(code);
+                    attributesList.add(attributes);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("Skipping invalid class in file: " + file.getName());
+                } catch (IOException e) {
+                    System.out.println("Error reading file: " + file.getAbsolutePath());
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // Create the model and return it
-        Model newModel = new Model(packageName, attributesList.get(0).getUser(), attributesList);
+        Model newModel = new Model(directory.getName(), user, attributesList);
         System.out.println(newModel.showAttributes());
         return newModel;
     }
+
+    // Helper method to recursively collect Java files
+    private static List<File> getJavaFiles(File dir) {
+        List<File> javaFiles = new ArrayList<>();
+        File[] files = dir.listFiles();
+
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    javaFiles.addAll(getJavaFiles(file));  // Recursive call
+                } else if (file.getName().toLowerCase().endsWith(".java")) {
+                    javaFiles.add(file);
+                }
+            }
+        }
+
+        return javaFiles;
+    }
+
 }

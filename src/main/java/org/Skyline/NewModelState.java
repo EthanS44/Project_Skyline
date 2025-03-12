@@ -5,10 +5,14 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
+
+import java.io.File;
 
 
 public class NewModelState implements State {
@@ -17,7 +21,6 @@ public class NewModelState implements State {
     private TextField packageNameTextField;
     private PackageParser packageParser;
     private ModelRepository modelRepository;
-
 
     NewModelState(StateContext context, ModelRepository modelRepository) {
         this.context = context;
@@ -66,6 +69,7 @@ public class NewModelState implements State {
     private void createModel() {
         // Get the package name entered by the user
         String packageName = packageNameTextField.getText().trim();
+        stage.close();
 
         if (packageName.isEmpty()) {
             System.out.println("Package name cannot be empty!");
@@ -76,7 +80,10 @@ public class NewModelState implements State {
         System.out.println("Creating model for package: " + packageName);
 
         // Parse java package and create model
-        Model newModel = packageParser.parsePackage(packageName);
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File directory = directoryChooser.showDialog(stage);
+
+        Model newModel = packageParser.parsePackage(directory, context.getCurrentUser());
         newModel.setUser(context.getCurrentUser());
 
         // Save model to database

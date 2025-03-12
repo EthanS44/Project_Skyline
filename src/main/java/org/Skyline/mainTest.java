@@ -11,8 +11,8 @@ public class mainTest {
 
         //src/main/java/com/example/models
 
-        model1 = parser1.parsePackage("com.example.models");
-        System.out.println(model1.toString());
+        //model1 = parser1.parsePackage("com.example.models");
+        //System.out.println(model1.toString());
 
     }
 }
