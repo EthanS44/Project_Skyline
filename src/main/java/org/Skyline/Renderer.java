@@ -1,5 +1,6 @@
 package org.Skyline;
 
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.image.Image;
@@ -105,6 +106,42 @@ private Group root;
         skybox.setMaterial(skyMaterial);
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
+        // Set up touch controls
+        VirtualJoystick joystick = new VirtualJoystick(root);
+        TouchControls controls = new TouchControls(root);
+
+        new AnimationTimer() {
+            @Override
+            public void handle(long now) {
+                double joystickX = joystick.getMoveX();
+                double joystickZ = joystick.getMoveZ();
+
+                if (joystickX != 0 || joystickZ != 0) {
+                    handleCameraMovement(null, camera, joystickX, joystickZ, false, false, false, false);
+                }
+            }
+        }.start();
+
+        new AnimationTimer() {
+            @Override
+            public void handle(long now){
+                boolean upPressed = controls.isMoveUpPressed();
+                boolean downPressed = controls.isMoveDownPressed();
+                boolean rotateLeftPressed = controls.isRotateLeftPressed();
+                boolean rotateRightPressed = controls.isRotateRightPressed();
+
+                if (upPressed) {
+                    handleCameraMovement(null, camera, 0, 0, true , false, false, false);
+                } else if (downPressed) {
+                    handleCameraMovement(null, camera, 0, 0, false, true, false, false);
+                } else if (rotateLeftPressed) {
+                    handleCameraMovement(null, camera, 0, 0, false, false, true, false);
+                } else if (rotateRightPressed) {
+                    handleCameraMovement(null, camera, 0, 0, false, false, false, true);
+                }
+            }
+        }.start();
+
         root = new Group(road, skybox, grass, concretePad, light, ambientLight);
 
         // Assign scene to the class-level variable
@@ -117,7 +154,7 @@ private Group root;
         camera.getTransforms().add(rotateY);
 
         //move camera
-        scene.setOnKeyPressed(event -> handleCameraMovement(event, camera));
+        scene.setOnKeyPressed(event -> handleCameraMovement(event, camera, 0, 0, false, false, false, false));
 
         //scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
     }
@@ -209,7 +246,7 @@ private Group root;
 
     }
 
-    private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
+    private void handleCameraMovement2(KeyEvent event, PerspectiveCamera camera) {
         // Initialize the camera variables based on the camera's current position
         cameraPosX = camera.getTranslateX();
         cameraPosY = camera.getTranslateY();
@@ -284,6 +321,71 @@ private Group root;
         camera.getTransforms().clear();  // Optional: clear only if needed
         camera.getTransforms().addAll(rotateX, rotateY);
     }
+
+    private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera, double joystickX, double joystickY, boolean moveUpPressed, boolean moveDownPressed, boolean rotateLeftPressed, boolean rotateRightPressed) {
+        // Initialize the camera variables based on the camera's current position
+        cameraPosX = camera.getTranslateX();
+        cameraPosY = camera.getTranslateY();
+        cameraPosZ = camera.getTranslateZ();
+
+        // Calculate direction vectors based on camera's rotation (yaw)
+        double forwardX = Math.sin(Math.toRadians(cameraAngleY));
+        double forwardZ = -Math.cos(Math.toRadians(cameraAngleY));
+        double rightX = Math.cos(Math.toRadians(cameraAngleY));
+        double rightZ = Math.sin(Math.toRadians(cameraAngleY));
+
+        // Initialize movement variables
+        double moveX = 0, moveZ = 0, moveY = 0;
+        double rotateY = 0;
+
+        // Handle keyboard controls
+        if (event != null) {
+            switch (event.getCode()) {
+                case W: moveX += forwardX * moveAmount; moveZ -= forwardZ * moveAmount; break;
+                case S: moveX -= forwardX * moveAmount; moveZ += forwardZ * moveAmount; break;
+                case A: moveX -= rightX * moveAmount; moveZ += rightZ * moveAmount; break;
+                case D: moveX += rightX * moveAmount; moveZ -= rightZ * moveAmount; break;
+                case UP: moveY -= moveAmount; break;
+                case DOWN:
+                    if (cameraPosY + moveAmount > -500) break;
+                    moveY += moveAmount;
+                    break;
+                case LEFT: rotateY -= rotationAmount; break;
+                case RIGHT: rotateY += rotationAmount; break;
+                default: break;
+            }
+        }
+
+        // Handle joystick movement (touch input)
+        moveX += (forwardX * joystickY + rightX * joystickX) * moveAmount;
+        moveZ -= (forwardZ * joystickY + rightZ * joystickX) * moveAmount;
+
+        // Handle button presses for rotation and vertical movement
+        if (moveUpPressed) moveY -= moveAmount;
+        if (moveDownPressed && cameraPosY + moveAmount <= -500) moveY += moveAmount;
+        if (rotateLeftPressed) cameraAngleY -= rotationAmount;
+        if (rotateRightPressed) cameraAngleY += rotationAmount;
+
+        // Apply movement
+        cameraPosX += moveX;
+        cameraPosY += moveY;
+        cameraPosZ += moveZ;
+        cameraAngleY += rotateY;
+
+        // Update camera position
+        camera.setTranslateX(cameraPosX);
+        camera.setTranslateY(cameraPosY);
+        camera.setTranslateZ(cameraPosZ);
+
+        // Create new rotation transforms based on the accumulated rotation angles
+        Rotate rotateX = new Rotate(cameraAngleX, Rotate.X_AXIS);
+        Rotate rotateYTransform = new Rotate(cameraAngleY, Rotate.Y_AXIS);
+
+        // Clear previous rotations and apply new ones
+        camera.getTransforms().clear();
+        camera.getTransforms().addAll(rotateX, rotateYTransform);
+    }
+
 
     private void updateCameraRotation(PerspectiveCamera camera) {
         camera.getTransforms().clear();
