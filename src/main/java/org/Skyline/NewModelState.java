@@ -6,14 +6,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
 
 import java.io.File;
-
 
 public class NewModelState implements State {
     private final StateContext context;
@@ -25,7 +23,6 @@ public class NewModelState implements State {
     NewModelState(StateContext context, ModelRepository modelRepository) {
         this.context = context;
         this.stage = new Stage();
-        this.packageParser = new PackageParser();
         this.modelRepository = modelRepository;
     }
 
@@ -36,22 +33,28 @@ public class NewModelState implements State {
         layout.setPadding(new javafx.geometry.Insets(10));
 
         // Label and TextField for package name
-        Label packageLabel = new Label("Enter Java Package Name:");
+        Label packageLabel = new Label("Enter Package Name:");
         packageNameTextField = new TextField();
         packageNameTextField.setPromptText("e.g., com.example.myapp");
 
-        // Button to create the model
-        Button createButton = new Button("Create Model");
-        createButton.setOnAction(event -> createModel());
+        // Buttons to select programming language
+        Button javaButton = new Button("Create Java Model");
+        javaButton.setOnAction(event -> selectLanguageAndCreateModel("Java"));
+
+        Button pythonButton = new Button("Create Python Model");
+        pythonButton.setOnAction(event -> selectLanguageAndCreateModel("Python"));
+
+        Button cppButton = new Button("Create C++ Model");
+        cppButton.setOnAction(event -> selectLanguageAndCreateModel("C++"));
 
         // Back button to return to the Main Menu
         Button backButton = new Button("Back");
         backButton.setOnAction(event -> context.setState(new MainMenuState(context)));
 
-        layout.getChildren().addAll(packageLabel, packageNameTextField, createButton, backButton);
+        layout.getChildren().addAll(packageLabel, packageNameTextField, javaButton, pythonButton, cppButton, backButton);
 
         // Set up the scene and stage
-        Scene scene = new Scene(layout, 300, 200);
+        Scene scene = new Scene(layout, 300, 250);
         stage.setTitle("New Model");
         stage.setScene(scene);
         stage.show();
@@ -59,14 +62,10 @@ public class NewModelState implements State {
 
     @Override
     public void handleAction(String action) {
-        // Example: Handle other possible actions if needed
-        if (action.equals("createModel")) {
-            createModel();
-        }
+
     }
 
-
-    private void createModel() {
+    private void selectLanguageAndCreateModel(String language) {
         // Get the package name entered by the user
         String packageName = packageNameTextField.getText().trim();
         stage.close();
@@ -76,20 +75,40 @@ public class NewModelState implements State {
             return;
         }
 
-        // Pass the package name to the context or another system for processing
-        System.out.println("Creating model for package: " + packageName);
+        // Set the correct PackageParser based on the selected language
+        switch (language) {
+            case "Java":
+                packageParser = new JavaPackageParser();
+                break;
+            case "Python":
+                packageParser = new PythonPackageParser();
+                break;
+            case "C++":
+                packageParser = new CppPackageParser();
+                break;
+            default:
+                System.out.println("Unsupported language.");
+                return;
+        }
 
-        // Parse java package and create model
+        // Show the directory chooser for selecting the package directory
         DirectoryChooser directoryChooser = new DirectoryChooser();
         File directory = directoryChooser.showDialog(stage);
 
+        if (directory == null) {
+            System.out.println("No directory selected.");
+            return;
+        }
+
+        // Parse the selected package and create the model
         Model newModel = packageParser.parsePackage(directory, context.getCurrentUser());
+        newModel.setName(packageName);
         newModel.setUser(context.getCurrentUser());
 
-        // Save model to database
+        // Save the model to the database
         context.getDatabaseManager().saveModel(newModel);
 
-        // Transition back to the Model List after processing
-        context.setState(new ModelListState(context, context.getModelRepository()));
+        // Transition to the Model List after processing
+        context.setState(new ModelListState(context, modelRepository));
     }
 }

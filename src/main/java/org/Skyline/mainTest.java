@@ -3,7 +3,7 @@ package org.Skyline;
 public class mainTest {
 
     public static void main(String[] args){
-        PackageParser parser1 = new PackageParser();
+        PackageParser parser1 = new JavaPackageParser();
 
         Model model1;
 
