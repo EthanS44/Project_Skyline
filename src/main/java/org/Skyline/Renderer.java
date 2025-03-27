@@ -2,6 +2,7 @@ package org.Skyline;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.geometry.Point3D;
 import javafx.scene.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
@@ -12,6 +13,7 @@ import javafx.scene.shape.CullFace;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
+import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import java.util.Random;
 
@@ -20,8 +22,13 @@ public class Renderer extends Application {
 
 private final double rotationAmount = 5.0;
 private final double moveAmount = 120;
+
+// camera angle
 private double cameraAngleX = 0;
 private double cameraAngleY = 0;
+private double cameraAngleZ = 0;
+
+// camera position
 private double cameraPosX = 0;
 private double cameraPosY = 0;
 private double cameraPosZ = 0;
@@ -31,6 +38,8 @@ private double groupAngleX = 0;
 private double groupAngleY = 0;
 private final double groupRotationAmount = 5.0;
 private final double groupMoveAmount = 10.0;
+
+private final int cameraDistance = 10000;
 
 private final double roadWidth = 400;
 
@@ -66,6 +75,11 @@ private Group root;
         road.setScaleY(1);
         road.setScaleZ(1);
 
+        Sphere origin = new Sphere(10);
+        PhongMaterial originmaterial = new PhongMaterial();
+        originmaterial.setDiffuseColor(Color.BLACK);
+        originmaterial.setSpecularColor(Color.BLACK);
+
         // Grass setup
         Box grass = new Box(20000, 0, 20000);
         PhongMaterial grassMaterial = new PhongMaterial();
@@ -94,67 +108,33 @@ private Group root;
         AmbientLight ambientLight = new AmbientLight(Color.WHITE);
 
         PerspectiveCamera camera = new PerspectiveCamera();
-        camera.setTranslateY(-500);
-        camera.setTranslateX(-450);
-        camera.setTranslateZ(500);
+        camera.setTranslateY(-cameraDistance);
+        camera.setTranslateZ(-cameraDistance);
+        Rotate rotateX = new Rotate(-45, Rotate.X_AXIS);
+        camera.getTransforms().addAll(rotateX);
+
+        // Set camera angle to face origin
+        //matrixRotateNode(camera, 0, 0, 0);
 
         // Skybox setup
-        Sphere skybox = new Sphere(10000);
+        Sphere skybox = new Sphere(50000);
         Image skyboxTexture = new Image("sky_texture.jpg");
         PhongMaterial skyMaterial = new PhongMaterial();
         skyMaterial.setDiffuseMap(skyboxTexture);
         skybox.setMaterial(skyMaterial);
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
-        // Set up touch controls
-        VirtualJoystick joystick = new VirtualJoystick(root);
-        TouchControls controls = new TouchControls(root);
-
-        new AnimationTimer() {
-            @Override
-            public void handle(long now) {
-                double joystickX = joystick.getMoveX();
-                double joystickZ = joystick.getMoveZ();
-
-                if (joystickX != 0 || joystickZ != 0) {
-                    handleCameraMovement(null, camera, joystickX, joystickZ, false, false, false, false);
-                }
-            }
-        }.start();
-
-        new AnimationTimer() {
-            @Override
-            public void handle(long now){
-                boolean upPressed = controls.isMoveUpPressed();
-                boolean downPressed = controls.isMoveDownPressed();
-                boolean rotateLeftPressed = controls.isRotateLeftPressed();
-                boolean rotateRightPressed = controls.isRotateRightPressed();
-
-                if (upPressed) {
-                    handleCameraMovement(null, camera, 0, 0, true , false, false, false);
-                } else if (downPressed) {
-                    handleCameraMovement(null, camera, 0, 0, false, true, false, false);
-                } else if (rotateLeftPressed) {
-                    handleCameraMovement(null, camera, 0, 0, false, false, true, false);
-                } else if (rotateRightPressed) {
-                    handleCameraMovement(null, camera, 0, 0, false, false, false, true);
-                }
-            }
-        }.start();
-
-        root = new Group(road, skybox, grass, concretePad, light, ambientLight);
+        root = new Group(road, skybox, grass, concretePad, light, ambientLight, origin);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
         scene.setCamera(camera);
 
-        // set camera start angle
-        cameraAngleY += 90;
-        Rotate rotateY = new Rotate(90, Rotate.Y_AXIS);
-        camera.getTransforms().add(rotateY);
+        //Detect key press and move accordingly
+        scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
 
-        //move camera
-        scene.setOnKeyPressed(event -> handleCameraMovement(event, camera, 0, 0, false, false, false, false));
+        //Detect touch event and move accordingly
+        //scene.setOnTouchMoved(event -> handleTouchMovement(event, root));
 
         //scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
     }
@@ -225,13 +205,26 @@ private Group root;
     }
 
     private void handleGroupMovement(KeyEvent event, Group group, PerspectiveCamera camera) {
+        double currentZ = camera.getTranslateZ();
+        double currentY = camera.getTranslateY();
+
         switch (event.getCode()) {
-            case W -> group.setTranslateZ(group.getTranslateZ() + moveAmount);
-            case S -> group.setTranslateZ(group.getTranslateZ() - moveAmount);
+            case W -> {
+                camera.setTranslateZ(currentZ + moveAmount);
+                camera.setTranslateY(currentY + moveAmount);
+            }
+            case S -> {
+                camera.setTranslateZ(currentZ - moveAmount);
+                camera.setTranslateY(currentY - moveAmount);
+            }
             case A -> group.setTranslateX(group.getTranslateX() - moveAmount);
+
             case D -> group.setTranslateX(group.getTranslateX() + moveAmount);
+
             case Q -> group.setTranslateY(group.getTranslateY() - moveAmount);
+
             case E -> group.setTranslateY(group.getTranslateY() + moveAmount);
+
             case UP -> groupAngleX -= rotationAmount;
             case DOWN -> groupAngleX += rotationAmount;
             case LEFT -> groupAngleY -= rotationAmount;
@@ -251,6 +244,10 @@ private Group root;
         cameraPosX = camera.getTranslateX();
         cameraPosY = camera.getTranslateY();
         cameraPosZ = camera.getTranslateZ();
+
+        Rotate rotateX = new Rotate(0, cameraPosX, cameraPosY, cameraPosZ, Rotate.X_AXIS);
+        Rotate rotateY = new Rotate(0, cameraPosX, cameraPosY, cameraPosZ, Rotate.Y_AXIS);
+        Rotate rotateZ = new Rotate(0, cameraPosX, cameraPosY, cameraPosZ, Rotate.Z_AXIS);
 
         // Calculate direction vectors based on camera's rotation (yaw)
         double forwardX = Math.sin(Math.toRadians(cameraAngleY));
@@ -280,20 +277,28 @@ private Group root;
                 cameraPosX += rightX * moveAmount;
                 cameraPosZ -= rightZ * moveAmount;
                 break;
-            case UP:
-                // Move up along the Y-axis
-                cameraPosY -= moveAmount;
-                break;
-            case DOWN:
+            case Q:
                 // Move down along the Y-axis
                 if(cameraPosY + moveAmount > -500){
                     break;
                 }
                 cameraPosY += moveAmount;
                 break;
+            case E:
+                // Move up along the Y-axis
+                cameraPosY -= moveAmount;
+                break;
+
+            case UP:
+                // look up
+                break;
+            case DOWN:
+                // look down
+                break;
             case LEFT:
                 // Rotate left (along the Y-axis)
                 cameraAngleY -= rotationAmount;
+                rotateY.setAngle(cameraAngleY);
                 break;
             case RIGHT:
                 // Rotate right (along the Y-axis)
@@ -308,84 +313,85 @@ private Group root;
         camera.setTranslateY(cameraPosY);
         camera.setTranslateZ(cameraPosZ);
 
+
         // Create new rotation transforms based on the accumulated rotation angles
-        Rotate rotateX = new Rotate(cameraAngleX, Rotate.X_AXIS);  // Rotate along X-axis (up/down)
-        Rotate rotateY = new Rotate(cameraAngleY, Rotate.Y_AXIS);  // Rotate along Y-axis (left/right)
+        //Rotate rotateX = new Rotate(cameraAngleX, Rotate.X_AXIS);  // Rotate along X-axis (up/down)
+        //Rotate rotateY = new Rotate(cameraAngleY, Rotate.Y_AXIS);  // Rotate along Y-axis (left/right)
+        //Rotate rotateZ = new Rotate();
 
         // Compound rotation (local space adjustment)
         double rollAngle = -Math.sin(Math.toRadians(cameraAngleY)) * cameraAngleX; // Adjust Z-axis based on yaw
         Rotate rotateRoll = new Rotate(rollAngle, Rotate.Z_AXIS); // Roll adjustment
 
-
         // Clear previous rotations and apply new ones
-        camera.getTransforms().clear();  // Optional: clear only if needed
-        camera.getTransforms().addAll(rotateX, rotateY);
+        //camera.getTransforms().clear();  // Optional: clear only if needed
+        camera.getTransforms().addAll(rotateX, rotateY, rotateZ);
     }
 
-    private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera, double joystickX, double joystickY, boolean moveUpPressed, boolean moveDownPressed, boolean rotateLeftPressed, boolean rotateRightPressed) {
-        // Initialize the camera variables based on the camera's current position
-        cameraPosX = camera.getTranslateX();
-        cameraPosY = camera.getTranslateY();
-        cameraPosZ = camera.getTranslateZ();
+    private void handleCameraMovement(KeyEvent event, PerspectiveCamera camera) {
+        double moveAmount = 10;         // Movement speed
+        double rotationAmount = 5;      // Rotation speed
 
-        // Calculate direction vectors based on camera's rotation (yaw)
+        // Direction Vectors for movement (relative to camera yaw)
         double forwardX = Math.sin(Math.toRadians(cameraAngleY));
         double forwardZ = -Math.cos(Math.toRadians(cameraAngleY));
         double rightX = Math.cos(Math.toRadians(cameraAngleY));
         double rightZ = Math.sin(Math.toRadians(cameraAngleY));
 
-        // Initialize movement variables
-        double moveX = 0, moveZ = 0, moveY = 0;
-        double rotateY = 0;
-
-        // Handle keyboard controls
-        if (event != null) {
-            switch (event.getCode()) {
-                case W: moveX += forwardX * moveAmount; moveZ -= forwardZ * moveAmount; break;
-                case S: moveX -= forwardX * moveAmount; moveZ += forwardZ * moveAmount; break;
-                case A: moveX -= rightX * moveAmount; moveZ += rightZ * moveAmount; break;
-                case D: moveX += rightX * moveAmount; moveZ -= rightZ * moveAmount; break;
-                case UP: moveY -= moveAmount; break;
-                case DOWN:
-                    if (cameraPosY + moveAmount > -500) break;
-                    moveY += moveAmount;
-                    break;
-                case LEFT: rotateY -= rotationAmount; break;
-                case RIGHT: rotateY += rotationAmount; break;
-                default: break;
-            }
+        switch (event.getCode()) {
+            case W: // Move forward
+                cameraPosX += forwardX * moveAmount;
+                cameraPosZ -= forwardZ * moveAmount;
+                break;
+            case S: // Move backward
+                cameraPosX -= forwardX * moveAmount;
+                cameraPosZ += forwardZ * moveAmount;
+                break;
+            case A: // Strafe left
+                cameraPosX -= rightX * moveAmount;
+                cameraPosZ += rightZ * moveAmount;
+                break;
+            case D: // Strafe right
+                cameraPosX += rightX * moveAmount;
+                cameraPosZ -= rightZ * moveAmount;
+                break;
+            case Q: // Move down
+                cameraPosY += moveAmount;
+                break;
+            case E: // Move up
+                cameraPosY -= moveAmount;
+                break;
+            case UP: // Look up (pitch)
+                cameraAngleX -= rotationAmount;
+                break;
+            case DOWN: // Look down (pitch)
+                cameraAngleX += rotationAmount;
+                break;
+            case LEFT: // Rotate left (yaw)
+                cameraAngleY -= rotationAmount;
+                break;
+            case RIGHT: // Rotate right (yaw)
+                cameraAngleY += rotationAmount;
+                break;
+            default:
+                break;
         }
 
-        // Handle joystick movement (touch input)
-        moveX += (forwardX * joystickY + rightX * joystickX) * moveAmount;
-        moveZ -= (forwardZ * joystickY + rightZ * joystickX) * moveAmount;
-
-        // Handle button presses for rotation and vertical movement
-        if (moveUpPressed) moveY -= moveAmount;
-        if (moveDownPressed && cameraPosY + moveAmount <= -500) moveY += moveAmount;
-        if (rotateLeftPressed) cameraAngleY -= rotationAmount;
-        if (rotateRightPressed) cameraAngleY += rotationAmount;
-
-        // Apply movement
-        cameraPosX += moveX;
-        cameraPosY += moveY;
-        cameraPosZ += moveZ;
-        cameraAngleY += rotateY;
-
-        // Update camera position
+        // **Apply Translations Separately**
         camera.setTranslateX(cameraPosX);
         camera.setTranslateY(cameraPosY);
         camera.setTranslateZ(cameraPosZ);
 
-        // Create new rotation transforms based on the accumulated rotation angles
-        Rotate rotateX = new Rotate(cameraAngleX, Rotate.X_AXIS);
-        Rotate rotateYTransform = new Rotate(cameraAngleY, Rotate.Y_AXIS);
-
-        // Clear previous rotations and apply new ones
+        // **Apply Rotation Separately**
         camera.getTransforms().clear();
-        camera.getTransforms().addAll(rotateX, rotateYTransform);
-    }
 
+        Rotate rotateY = new Rotate(cameraAngleY, camera.getTranslateX(), camera.getTranslateY(), camera.getTranslateZ(), Rotate.Y_AXIS); // Yaw
+        Rotate rotateX = new Rotate(cameraAngleX, camera.getTranslateX(), camera.getTranslateY(), camera.getTranslateZ(), Rotate.X_AXIS); // Pitch
+        Rotate rotateZ = new Rotate(cameraAngleZ, camera.getTranslateX(), camera.getTranslateY(), camera.getTranslateZ(), Rotate.Z_AXIS); // Roll
+
+        // **Only Rotate Without Moving**
+        camera.getTransforms().addAll(rotateY, rotateX, rotateZ);
+    }
 
     private void updateCameraRotation(PerspectiveCamera camera) {
         camera.getTransforms().clear();
@@ -427,6 +433,26 @@ private Group root;
                 return attributes.getNumberOfImports();
             default:
                 return 1;
+        }
+    }
+
+    private void matrixRotateNode(Node n, double Z, double X, double Y){
+        double A11=Math.cos(Z)*Math.cos(Y);
+        double A12=Math.cos(X)*Math.sin(Z)+Math.cos(Z)*Math.sin(X)*Math.sin(Y);
+        double A13=Math.sin(Z)*Math.sin(X)-Math.cos(Z)*Math.cos(X)*Math.sin(Y);
+        double A21=-Math.cos(Y)*Math.sin(Z);
+        double A22=Math.cos(Z)*Math.cos(X)-Math.sin(Z)*Math.sin(X)*Math.sin(Y);
+        double A23=Math.cos(Z)*Math.sin(X)+Math.cos(X)*Math.sin(Z)*Math.sin(Y);
+        double A31=Math.sin(Y);
+        double A32=-Math.cos(Y)*Math.sin(X);
+        double A33=Math.cos(X)*Math.cos(Y);
+
+        double d = Math.acos((A11+A22+A33-1d)/2d);
+        if(d!=0d){
+            double den=2d*Math.sin(d);
+            Point3D p= new Point3D((A32-A23)/den,(A13-A31)/den,(A21-A12)/den);
+            n.setRotationAxis(p);
+            n.setRotate(Math.toDegrees(d));
         }
     }
 
