@@ -19,8 +19,8 @@ public class DatabaseManager {
     public void saveModel(Model model) {
         String insertModelSQL = "INSERT INTO Models (model_name, username) VALUES (?, ?) RETURNING model_id";
         String insertAttributeSQL = "INSERT INTO Attributes (model_id, linesOfCode, linesOfCodeNoBlanks, numberOfFields, numberOfMethods, " +
-                "averageLinesPerMethod, maxCyclomaticComplexity, inheritanceDepth, numberOfAssociations, numberOfImports) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "averageLinesPerMethod, maxCyclomaticComplexity, inheritanceDepth, numberOfAssociations, numberOfImports, attribute_name) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement modelStatement = connection.prepareStatement(insertModelSQL);
@@ -47,6 +47,7 @@ public class DatabaseManager {
                     attributeStatement.setInt(8, attr.getInheritanceDepth());
                     attributeStatement.setInt(9, attr.getNumberOfAssociations());
                     attributeStatement.setInt(10, attr.getNumberOfImports());
+                    attributeStatement.setString(11, attr.getName());
                     attributeStatement.executeUpdate();
                 }
             }
@@ -93,6 +94,7 @@ public class DatabaseManager {
                     attr.setInheritanceDepth(attributesResult.getInt("inheritanceDepth"));
                     attr.setNumberOfAssociations(attributesResult.getInt("numberOfAssociations"));
                     attr.setNumberOfImports(attributesResult.getInt("numberOfImports"));
+                    attr.setName(attributesResult.getString("attribute_name"));
                     attributesList.add(attr);
                 }
 

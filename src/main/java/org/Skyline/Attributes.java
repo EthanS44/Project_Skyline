@@ -7,8 +7,8 @@ public class Attributes {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
     private long id;
-    private String name = null;
-    private String user = null;
+    private String name;
+    private String user;
     private int linesOfCode = 0;
     private int linesOfCodeNoBlanks = 0;
     private int numberOfFields = 0;
@@ -138,23 +138,4 @@ public class Attributes {
                 ", classPackage='" + classPackage + '\'' +
                 '}';
     }
-
-
-    /*
-    public List<String> getAssociations() {
-        return associations;
-    }
-
-    public void setAssociations(List<String> associations) {
-        this.associations = associations;
-    }
-
-    public List<String> getImports() {
-        return imports;
-    }
-
-    public void setImports(List<String> imports) {
-        this.imports = imports;
-    }
-     */
 }

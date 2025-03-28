@@ -2,13 +2,16 @@ package org.Skyline;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Point3D;
 import javafx.scene.*;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
 import javafx.scene.shape.CullFace;
@@ -17,6 +20,7 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +54,7 @@ private final double rotationSpeed = 0.2;
 
 private final int cameraDistance = 10000;
 
-private final double roadWidth = 400;
+private final double roadWidth = 300;
 
 private final int MULTIPLIER = 10;
 
@@ -75,17 +79,17 @@ private Group root;
     private void setUp() {
 
         // Intersection setup
-        Box intersection = new Box(800, 0, 800);
+        Box intersection = new Box(600, 0, 600);
         Image intersectionTexture = new Image("intersection_texture.jpg");
         PhongMaterial intersectionMaterial = new PhongMaterial();
         intersectionMaterial.setDiffuseMap(intersectionTexture);
-        intersectionMaterial.setSpecularMap(intersectionTexture);
+        intersectionMaterial.setSpecularColor(Color.rgb(50,50,50));
         intersection.getTransforms().add(new Scale(1, 1, 1));
         intersection.setMaterial(intersectionMaterial);
-        intersection.setTranslateY(-3);
+        intersection.setTranslateY(-4.5);
 
         // Roads setup
-        Box road = new Box(2000, 0, roadWidth);
+        Box road = new Box(2200, 0, roadWidth);
         Image roadTexture = new Image("road_texture.jpg");
         PhongMaterial roadMaterial = new PhongMaterial();
         roadMaterial.setDiffuseMap(roadTexture);
@@ -97,7 +101,7 @@ private Group root;
         road.setScaleZ(1);
 
         // Roads setup
-        Box road2 = new Box(roadWidth, 0, 2000);
+        Box road2 = new Box(roadWidth, 0, 2200);
         Image road2Texture = new Image("road_texture2.jpg");
         PhongMaterial road2Material = new PhongMaterial();
         road2Material.setDiffuseMap(road2Texture);
@@ -109,8 +113,8 @@ private Group root;
         road2.setScaleZ(10);
 
         // Position road on top of the concrete pad
-        road.setTranslateY(-2);
-        road2.setTranslateY(-2);
+        road.setTranslateY(-3);
+        road2.setTranslateY(-3);
 
         Sphere origin = new Sphere(10);
         PhongMaterial originmaterial = new PhongMaterial();
@@ -119,30 +123,23 @@ private Group root;
 
         // Grass setup
         Box grass = new Box(110000, 0, 110000);
+        Image grassTextureImage = new Image("grass_texture.jpg");
         PhongMaterial grassMaterial = new PhongMaterial();
-        grassMaterial.setDiffuseColor(Color.DARKGREEN);
+        grassMaterial.setDiffuseMap(grassTextureImage);
         grassMaterial.setSpecularColor(Color.DARKGREEN);
         grass.setMaterial(grassMaterial);
 
         // Concrete pad setup
-        Box concretePad = new Box(20000, 0, roadWidth * 3); // Same length as road, 3x wider, small height
+        Box concretePad = new Box(23000, 0, 23000); // Same length as road, 3x wider, small height
+        Image concreteTextureImage = new Image("concrete_texture.jpeg");
         PhongMaterial concreteMaterial = new PhongMaterial();
-        concreteMaterial.setDiffuseColor(Color.rgb(0, 50, 0));
-        concreteMaterial.setSpecularColor(Color.rgb(0, 50, 0));
+        concreteMaterial.setDiffuseMap(concreteTextureImage);
+        concreteMaterial.setSpecularColor(Color.rgb(50, 50, 50));
         concretePad.setMaterial(concreteMaterial);
-        concretePad.setTranslateY(-0.5); // Slightly lower than the road
+        concretePad.setTranslateY(-1.5); // Slightly lower than the road
         concretePad.setTranslateX(road.getTranslateX()); // Align with the road
         concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
 
-        // Concrete pad setup
-        Box concretePad2 = new Box(roadWidth * 3, 0, 20000); // Same length as road, 3x wider, small height
-        PhongMaterial concreteMaterial2 = new PhongMaterial();
-        concreteMaterial2.setDiffuseColor(Color.rgb(0, 50, 0));
-        concreteMaterial2.setSpecularColor(Color.rgb(0, 50, 0));
-        concretePad2.setMaterial(concreteMaterial2);
-        concretePad2.setTranslateY(-0.5); // Slightly lower than the road
-        concretePad2.setTranslateX(road.getTranslateX()); // Align with the road
-        concretePad2.setTranslateZ(road.getTranslateZ()); // Align with the road
 
         // Lights and camera
         PointLight light = new PointLight();
@@ -169,7 +166,7 @@ private Group root;
         skybox.setMaterial(skyMaterial);
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
-        root = new Group(intersection, road, road2, skybox, grass, concretePad, concretePad2, light, ambientLight, origin);
+        root = new Group(intersection, road, road2, skybox, grass, concretePad, light, ambientLight, origin);
 
         final int TREE_NUMBER = 4000;
         Group treeGroup = new Group();
@@ -243,12 +240,12 @@ private Group root;
     }
 
     // Define min and max dimensions for buildings
-    private static final double MIN_BUILDING_X = 200;  // Min width
-    private static final double MAX_BUILDING_X = 1200;  // Max width
-    private static final double MIN_BUILDING_Y = 200;  // Min height
-    private static final double MAX_BUILDING_Y = 5000; // Max height
-    private static final double MIN_BUILDING_Z = 200;  // Min depth
-    private static final double MAX_BUILDING_Z = 1200;  // Max depth
+    private static final double MIN_BUILDING_X = 500;  // Min width
+    private static final double MAX_BUILDING_X = 1800;  // Max width
+    private static final double MIN_BUILDING_Y = 600;  // Min height
+    private static final double MAX_BUILDING_Y = 7000; // Max height
+    private static final double MIN_BUILDING_Z = 500;  // Min depth
+    private static final double MAX_BUILDING_Z = 1800;  // Max depth
 
 
     private List<Box> createBuildings() {
@@ -259,6 +256,9 @@ private Group root;
 
         List<Box> buildings = new ArrayList<>();
         Random random = new Random();
+
+        // Load the texture image
+        Image buildingTextureImage = new Image("building_texture.jpg"); // Adjust path if necessary
 
         // Determine the min and max values for attributes
         double minX = Double.MAX_VALUE, maxX = Double.MIN_VALUE;
@@ -284,9 +284,12 @@ private Group root;
 
         for (Attributes attribute : model.getAttributesList()) {
             PhongMaterial buildingMaterial = new PhongMaterial();
-            double shade = 0.05 + (random.nextDouble() * (0.30 - 0.05));
+            double shade = 0.10 + (random.nextDouble() * (0.35));
             buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
             buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
+
+            // Apply the texture to the building
+            buildingMaterial.setDiffuseMap(buildingTextureImage); // Set texture as diffuse map
 
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
 
@@ -304,8 +307,18 @@ private Group root;
                 buildingMaterial.setDiffuseColor(Color.DARKRED);
                 buildingMaterial.setSpecularColor(Color.DARKRED);
             }
-            
+
             attributeBox.setMaterial(buildingMaterial);
+
+            // Tooltip setup as previously
+            String tooltipText = attribute.getName() + "\n" +
+                    "X: " + xParameter + " = " + getAttributeFromString(xParameter, attribute) + " --> Threshold = " + context.getxParameterThreshold() + "\n" +
+                    "Y: " + yParameter + " = " + getAttributeFromString(yParameter, attribute) +" --> Threshold = " + context.getyParameterThreshold() + "\n" +
+                    "Z: " + zParameter + " = " + getAttributeFromString(zParameter, attribute) + " --> Threshold = " + context.getzParameterThreshold();
+            Tooltip tooltip = new Tooltip(tooltipText);
+            tooltip.setShowDelay(Duration.millis(1));
+            Tooltip.install(attributeBox, tooltip);
+
             buildings.add(attributeBox);
         }
         return buildings;

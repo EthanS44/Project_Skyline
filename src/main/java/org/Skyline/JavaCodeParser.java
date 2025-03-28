@@ -153,6 +153,7 @@ public class JavaCodeParser extends CodeParser {
             Attributes attributes = new Attributes();
 
             attributes.setName(findClassName(code));
+            System.out.println(attributes.getName());
 
             attributes.setLinesOfCode(countLinesIncludingComments(code));
 
