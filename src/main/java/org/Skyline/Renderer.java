@@ -262,7 +262,7 @@ private Group root;
                 buildingMaterial.setDiffuseColor(Color.DARKRED);
                 buildingMaterial.setSpecularColor(Color.DARKRED);
             }
-
+            
             attributeBox.setMaterial(buildingMaterial);
             buildings.add(attributeBox);
         }
