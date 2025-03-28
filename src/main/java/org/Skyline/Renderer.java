@@ -6,6 +6,7 @@ import javafx.geometry.Point3D;
 import javafx.scene.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Box;
@@ -20,7 +21,7 @@ import java.util.Random;
 
 public class Renderer extends Application {
 
-private final double rotationAmount = 5.0;
+private final double rotationAmount = 1;
 private final double moveAmount = 120;
 
 // camera angle
@@ -63,7 +64,18 @@ private Group root;
     }
 
     private void setUp() {
-        // Road setup
+
+        // Intersection setup
+        Box intersection = new Box(800, 0, 800);
+        Image intersectionTexture = new Image("intersection_texture.jpg");
+        PhongMaterial intersectionMaterial = new PhongMaterial();
+        intersectionMaterial.setDiffuseMap(intersectionTexture);
+        intersectionMaterial.setSpecularMap(intersectionTexture);
+        intersection.getTransforms().add(new Scale(1, 1, 1));
+        intersection.setMaterial(intersectionMaterial);
+        intersection.setTranslateY(-3);
+
+        // Roads setup
         Box road = new Box(1500, 0, roadWidth);
         Image roadTexture = new Image("road_texture.jpg");
         PhongMaterial roadMaterial = new PhongMaterial();
@@ -75,13 +87,29 @@ private Group root;
         road.setScaleY(1);
         road.setScaleZ(1);
 
+        // Roads setup
+        Box road2 = new Box(roadWidth, 0, 1500);
+        Image road2Texture = new Image("road_texture2.jpg");
+        PhongMaterial road2Material = new PhongMaterial();
+        road2Material.setDiffuseMap(road2Texture);
+        road2Material.setSpecularMap(road2Texture);
+        road2.getTransforms().add(new Scale(1, 1, 1));
+        road2.setMaterial(road2Material);
+        road2.setScaleX(1);
+        road2.setScaleY(1);
+        road2.setScaleZ(10);
+
+        // Position road on top of the concrete pad
+        road.setTranslateY(-2);
+        road2.setTranslateY(-2);
+
         Sphere origin = new Sphere(10);
         PhongMaterial originmaterial = new PhongMaterial();
         originmaterial.setDiffuseColor(Color.BLACK);
         originmaterial.setSpecularColor(Color.BLACK);
 
         // Grass setup
-        Box grass = new Box(20000, 0, 20000);
+        Box grass = new Box(110000, 0, 110000);
         PhongMaterial grassMaterial = new PhongMaterial();
         grassMaterial.setDiffuseColor(Color.DARKGREEN);
         grassMaterial.setSpecularColor(Color.DARKGREEN);
@@ -97,8 +125,6 @@ private Group root;
         concretePad.setTranslateX(road.getTranslateX()); // Align with the road
         concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
 
-        // Position road on top of the concrete pad
-        road.setTranslateY(-2);
 
         // Lights and camera
         PointLight light = new PointLight();
@@ -110,6 +136,7 @@ private Group root;
         PerspectiveCamera camera = new PerspectiveCamera();
         camera.setTranslateY(-cameraDistance);
         camera.setTranslateZ(-cameraDistance);
+        camera.setTranslateX(-500);
         Rotate rotateX = new Rotate(-45, Rotate.X_AXIS);
         camera.getTransforms().addAll(rotateX);
 
@@ -124,7 +151,7 @@ private Group root;
         skybox.setMaterial(skyMaterial);
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
-        root = new Group(road, skybox, grass, concretePad, light, ambientLight, origin);
+        root = new Group(intersection, road, road2, skybox, grass, concretePad, light, ambientLight, origin);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
@@ -139,7 +166,15 @@ private Group root;
         //scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
     }
 
-    private void addBuildings(){
+    // Define min and max dimensions for buildings
+    private static final double MIN_BUILDING_X = 200;  // Min width
+    private static final double MAX_BUILDING_X = 1200;  // Max width
+    private static final double MIN_BUILDING_Y = 200;  // Min height
+    private static final double MAX_BUILDING_Y = 5000; // Max height
+    private static final double MIN_BUILDING_Z = 200;  // Min depth
+    private static final double MAX_BUILDING_Z = 1200;  // Max depth
+
+    private void addBuildings() {
         Model model = context.getSelectedModel();
         String xParameter = context.getxParameter();
         String yParameter = context.getyParameter();
@@ -149,33 +184,58 @@ private Group root;
         Random random = new Random();
 
         int currentXPixel = -5000;
-        int currentZPixel = 0;
         int previousBuildingWidth = 0;
-        int spacing = 400; // spacing between buildings
+        int spacing = 400; // Spacing between buildings
         boolean sideOfRoad = false;
 
-        for (Attributes attribute: model.getAttributesList()){
+        // Determine the min and max values for attributes
+        double minX = Double.MAX_VALUE, maxX = Double.MIN_VALUE;
+        double minY = Double.MAX_VALUE, maxY = Double.MIN_VALUE;
+        double minZ = Double.MAX_VALUE, maxZ = Double.MIN_VALUE;
 
-            if (sideOfRoad){sideOfRoad = false;}
-            else{sideOfRoad = true;}
+        // Find the min and max for each parameter
+        for (Attributes attribute : model.getAttributesList()) {
+            double xValue = getAttributeFromString(xParameter, attribute);
+            double yValue = getAttributeFromString(yParameter, attribute);
+            double zValue = getAttributeFromString(zParameter, attribute);
 
-            // set random greyscale shade for building
+            minX = Math.min(minX, xValue);
+            maxX = Math.max(maxX, xValue);
+            minY = Math.min(minY, yValue);
+            maxY = Math.max(maxY, yValue);
+            minZ = Math.min(minZ, zValue);
+            maxZ = Math.max(maxZ, zValue);
+        }
+
+        // Scaling factors for each dimension
+        double scaleX = (maxX - minX) > 0 ? (MAX_BUILDING_X - MIN_BUILDING_X) / (maxX - minX) : 1;
+        double scaleY = (maxY - minY) > 0 ? (MAX_BUILDING_Y - MIN_BUILDING_Y) / (maxY - minY) : 1;
+        double scaleZ = (maxZ - minZ) > 0 ? (MAX_BUILDING_Z - MIN_BUILDING_Z) / (maxZ - minZ) : 1;
+
+        for (Attributes attribute : model.getAttributesList()) {
+            sideOfRoad = !sideOfRoad;
+
+            // Set random greyscale shade for the building
             buildingMaterial = new PhongMaterial();
-            double minShade = 0.05;   // Dark Grey
-            double maxShade = 0.30;  // Light gray (where 1.0 would be white)
-
-            double shade = minShade + (random.nextDouble() * (maxShade - minShade));
-            /*
-            uncomment this for random color instead
-            double red = random.nextDouble();   // Random value between 0.0 and 1.0
-            double green = random.nextDouble(); // Random value between 0.0 and 1.0
-            double blue = random.nextDouble();  // Random value between 0.0 and 1.0
-            */
+            double shade = 0.05 + (random.nextDouble() * (0.30 - 0.05));
             buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
             buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
+
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
 
-            if (attributeBox.getWidth()/MULTIPLIER > context.getxParameterThreshold() || attributeBox.getHeight()/MULTIPLIER > context.getyParameterThreshold() || attributeBox.getDepth()/MULTIPLIER > context.getzParameterThreshold()){
+            // Normalize and scale dimensions
+            double normalizedWidth  = MIN_BUILDING_X + ((getAttributeFromString(xParameter, attribute) - minX) * scaleX);
+            double normalizedHeight = MIN_BUILDING_Y + ((getAttributeFromString(yParameter, attribute) - minY) * scaleY);
+            double normalizedDepth  = MIN_BUILDING_Z + ((getAttributeFromString(zParameter, attribute) - minZ) * scaleZ);
+
+            attributeBox.setWidth(normalizedWidth);
+            attributeBox.setHeight(normalizedHeight);
+            attributeBox.setDepth(normalizedDepth);
+
+            // Apply color for buildings exceeding thresholds
+            if (normalizedWidth / MULTIPLIER > context.getxParameterThreshold() ||
+                    normalizedHeight / MULTIPLIER > context.getyParameterThreshold() ||
+                    normalizedDepth / MULTIPLIER > context.getzParameterThreshold()) {
                 buildingMaterial.setDiffuseColor(Color.DARKRED);
                 buildingMaterial.setSpecularColor(Color.DARKRED);
             }
@@ -183,14 +243,10 @@ private Group root;
             attributeBox.setMaterial(buildingMaterial);
             root.getChildren().add(attributeBox);
 
-
-            // put buildings on alternating sides of road
-            if(sideOfRoad){
-                attributeBox.setTranslateZ(roadWidth/2 + 20 + (attributeBox.getDepth()/2));}
-            else{
-                attributeBox.setTranslateZ(-(roadWidth/2 + 20 + (attributeBox.getDepth()/2)));
-            }
-            attributeBox.setTranslateY(0 - (attributeBox.getHeight()/2));
+            // Alternate buildings on the sides of the road
+            attributeBox.setTranslateZ(sideOfRoad ? (roadWidth / 2 + 20 + (attributeBox.getDepth() / 2))
+                    : -(roadWidth / 2 + 20 + (attributeBox.getDepth() / 2)));
+            attributeBox.setTranslateY(-attributeBox.getHeight() / 2);
 
             currentXPixel += attributeBox.getWidth() + previousBuildingWidth + spacing;
             attributeBox.setTranslateX(currentXPixel);
@@ -210,27 +266,40 @@ private Group root;
 
         switch (event.getCode()) {
             case W -> {
-                camera.setTranslateZ(currentZ + moveAmount);
-                camera.setTranslateY(currentY + moveAmount);
+                // move in if it is less than 0
+                if (currentY <= 0){
+                    camera.setTranslateZ(currentZ + moveAmount);
+                    camera.setTranslateY(currentY + moveAmount);
+                }
             }
             case S -> {
-                camera.setTranslateZ(currentZ - moveAmount);
-                camera.setTranslateY(currentY - moveAmount);
+                // move back if it is under maximum
+                if (currentY >= -45000){
+                    camera.setTranslateZ(currentZ - moveAmount);
+                    camera.setTranslateY(currentY - moveAmount);
+                }
             }
-            case A -> group.setTranslateX(group.getTranslateX() - moveAmount);
 
-            case D -> group.setTranslateX(group.getTranslateX() + moveAmount);
+            // Rotate downward
+            case UP -> {
+                if (groupAngleX >= -40){
+                    groupAngleX -= rotationAmount;
+                }
+            }
 
-            case Q -> group.setTranslateY(group.getTranslateY() - moveAmount);
+            // Rotate upward
+            case DOWN -> {
+                if (groupAngleX <= 45){
+                    groupAngleX += rotationAmount;
+                }
+            }
 
-            case E -> group.setTranslateY(group.getTranslateY() + moveAmount);
-
-            case UP -> groupAngleX -= rotationAmount;
-            case DOWN -> groupAngleX += rotationAmount;
+            // Rotate clockwise & counterclockwise
             case LEFT -> groupAngleY -= rotationAmount;
             case RIGHT -> groupAngleY += rotationAmount;
         }
 
+        // Apply rotation changes
         group.getTransforms().clear();
         group.getTransforms().addAll(
                 new Rotate(groupAngleX, Rotate.X_AXIS),
@@ -454,6 +523,54 @@ private Group root;
             n.setRotationAxis(p);
             n.setRotate(Math.toDegrees(d));
         }
+    }
+
+    public static double getYaw(Node n) {
+        double[][] matrix = getRotationMatrix(n);
+        return Math.toDegrees(Math.asin(matrix[2][0])); // Y = asin(A31)
+    }
+
+    // Extract Pitch (X) Angle
+    public static double getPitch(Node n) {
+        double[][] matrix = getRotationMatrix(n);
+        if (Math.abs(matrix[2][0]) < 0.99999) {
+            return Math.toDegrees(Math.atan2(-matrix[2][1], matrix[2][2])); // X = atan2(-A32, A33)
+        } else {
+            return 0; // Gimbal lock case, assume X = 0
+        }
+    }
+
+    // Extract Roll (Z) Angle
+    public static double getRoll(Node n) {
+        double[][] matrix = getRotationMatrix(n);
+        if (Math.abs(matrix[2][0]) < 0.99999) {
+            return Math.toDegrees(Math.atan2(-matrix[1][0], matrix[0][0])); // Z = atan2(-A21, A11)
+        } else {
+            return Math.toDegrees(Math.atan2(matrix[0][1], matrix[1][1])); // Gimbal lock case
+        }
+    }
+
+    // Helper function: Compute rotation matrix from node's rotation axis & angle
+    private static double[][] getRotationMatrix(Node n) {
+        Point3D axis = n.getRotationAxis();
+        double angle = Math.toRadians(n.getRotate());
+
+        if (axis == null || angle == 0) {
+            return new double[][]{
+                    {1, 0, 0},
+                    {0, 1, 0},
+                    {0, 0, 1}
+            }; // Identity matrix (no rotation)
+        }
+
+        double ux = axis.getX(), uy = axis.getY(), uz = axis.getZ();
+        double c = Math.cos(angle), s = Math.sin(angle), t = 1 - c;
+
+        return new double[][]{
+                {t * ux * ux + c,      t * ux * uy - s * uz,  t * ux * uz + s * uy}, // Row 1
+                {t * uy * ux + s * uz, t * uy * uy + c,      t * uy * uz - s * ux}, // Row 2
+                {t * uz * ux - s * uy, t * uz * uy + s * ux, t * uz * uz + c}       // Row 3
+        };
     }
 
 }
