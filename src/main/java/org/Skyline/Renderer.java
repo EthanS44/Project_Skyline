@@ -85,7 +85,7 @@ private Group root;
         intersection.setTranslateY(-3);
 
         // Roads setup
-        Box road = new Box(1500, 0, roadWidth);
+        Box road = new Box(2000, 0, roadWidth);
         Image roadTexture = new Image("road_texture.jpg");
         PhongMaterial roadMaterial = new PhongMaterial();
         roadMaterial.setDiffuseMap(roadTexture);
@@ -97,7 +97,7 @@ private Group root;
         road.setScaleZ(1);
 
         // Roads setup
-        Box road2 = new Box(roadWidth, 0, 1500);
+        Box road2 = new Box(roadWidth, 0, 2000);
         Image road2Texture = new Image("road_texture2.jpg");
         PhongMaterial road2Material = new PhongMaterial();
         road2Material.setDiffuseMap(road2Texture);
@@ -134,6 +134,16 @@ private Group root;
         concretePad.setTranslateX(road.getTranslateX()); // Align with the road
         concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
 
+        // Concrete pad setup
+        Box concretePad2 = new Box(roadWidth * 3, 0, 20000); // Same length as road, 3x wider, small height
+        PhongMaterial concreteMaterial2 = new PhongMaterial();
+        concreteMaterial2.setDiffuseColor(Color.rgb(0, 50, 0));
+        concreteMaterial2.setSpecularColor(Color.rgb(0, 50, 0));
+        concretePad2.setMaterial(concreteMaterial2);
+        concretePad2.setTranslateY(-0.5); // Slightly lower than the road
+        concretePad2.setTranslateX(road.getTranslateX()); // Align with the road
+        concretePad2.setTranslateZ(road.getTranslateZ()); // Align with the road
+
 
         // Lights and camera
         PointLight light = new PointLight();
@@ -144,7 +154,7 @@ private Group root;
 
         PerspectiveCamera camera = new PerspectiveCamera();
         camera.setTranslateY(-cameraDistance);
-        camera.setTranslateZ(-cameraDistance);
+        camera.setTranslateZ(-cameraDistance + 500);
         camera.setTranslateX(-500);
         Rotate rotateX = new Rotate(-45, Rotate.X_AXIS);
         camera.getTransforms().addAll(rotateX);
@@ -160,7 +170,7 @@ private Group root;
         skybox.setMaterial(skyMaterial);
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
-        root = new Group(intersection, road, road2, skybox, grass, concretePad, light, ambientLight, origin);
+        root = new Group(intersection, road, road2, skybox, grass, concretePad, concretePad2, light, ambientLight, origin);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
@@ -256,9 +266,9 @@ private Group root;
             attributeBox.setHeight(normalizedHeight);
             attributeBox.setDepth(normalizedDepth);
 
-            if (normalizedWidth / MULTIPLIER > context.getxParameterThreshold() ||
-                    normalizedHeight / MULTIPLIER > context.getyParameterThreshold() ||
-                    normalizedDepth / MULTIPLIER > context.getzParameterThreshold()) {
+            if (getAttributeFromString(xParameter, attribute) > context.getxParameterThreshold() ||
+                    getAttributeFromString(yParameter, attribute) > context.getyParameterThreshold() ||
+                    getAttributeFromString(zParameter, attribute) > context.getzParameterThreshold()) {
                 buildingMaterial.setDiffuseColor(Color.DARKRED);
                 buildingMaterial.setSpecularColor(Color.DARKRED);
             }
@@ -270,6 +280,57 @@ private Group root;
     }
 
     private void placeBuildings(List<Box> buildings) {
+        int currentXPixelPositive = (int) (600 + buildings.get(0).getWidth()); // Start at the intersection for the positive X-axis
+        int currentXPixelNegative = (int) (600 + buildings.get(1).getWidth()); // Start at the intersection for the negative X-axis
+        int currentZPixelPositive = (int) (600 + buildings.get(2).getDepth()); // Start at the intersection for the positive Z-axis
+        int currentZPixelNegative = (int) (600 + buildings.get(3).getDepth()); // Start at the intersection for the negative Z-axis
+        int spacing = 800; // Space between buildings
+        boolean sideOfRoad = false; // For alternating side of the road
+        boolean positiveDirection = true; // For alternating between positive and negative directions
+        int count = 0; // To count buildings for toggling sides every two buildings
+
+        for (Box attributeBox : buildings) {
+            if (count % 3 == 0) {
+                sideOfRoad = !sideOfRoad;  // Toggle side of the road every two buildings
+            }
+
+            positiveDirection = !positiveDirection; // Switch between positive and negative directions
+
+            if (currentXPixelPositive <= currentZPixelPositive) {
+                // Place along the X-axis road
+                attributeBox.setTranslateZ(sideOfRoad ? (roadWidth / 2 + 20 + attributeBox.getDepth() / 2)
+                        : -(roadWidth / 2 + 20 + attributeBox.getDepth() / 2));
+
+                if (positiveDirection) {
+                    attributeBox.setTranslateX(currentXPixelPositive);  // Positive X direction
+                    currentXPixelPositive += attributeBox.getWidth() + spacing; // Move forward on the X-axis
+                } else {
+                    attributeBox.setTranslateX(-currentXPixelNegative); // Negative X direction
+                    currentXPixelNegative += attributeBox.getWidth() + spacing; // Move backward on the X-axis
+                }
+            } else {
+                // Place along the Z-axis road
+                attributeBox.setTranslateX(sideOfRoad ? (roadWidth / 2 + 20 + attributeBox.getWidth() / 2)
+                        : -(roadWidth / 2 + 20 + attributeBox.getWidth() / 2));
+
+                if (positiveDirection) {
+                    attributeBox.setTranslateZ(currentZPixelPositive); // Positive Z direction
+                    currentZPixelPositive += attributeBox.getDepth() + spacing; // Move forward on the Z-axis
+                } else {
+                    attributeBox.setTranslateZ(-currentZPixelNegative); // Negative Z direction
+                    currentZPixelNegative += attributeBox.getDepth() + spacing; // Move backward on the Z-axis
+                }
+            }
+
+            // Adjust height and add to the scene
+            attributeBox.setTranslateY(-attributeBox.getHeight() / 2);
+            root.getChildren().add(attributeBox);
+
+            count++; // Increment counter for alternating the side of the road
+        }
+    }
+
+    /*private void placeBuildings2(List<Box> buildings) {
         int currentXPixel = -5000;
         int spacing = 400;
         boolean sideOfRoad = false;
@@ -287,7 +348,7 @@ private Group root;
 
             root.getChildren().add(attributeBox);
         }
-    }
+    }*/
 
     private void showRenderer() {
         primaryStage.setScene(scene);
