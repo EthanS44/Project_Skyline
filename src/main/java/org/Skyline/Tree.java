@@ -15,7 +15,8 @@ public class Tree extends Group {
         // Trunk (Cylinder)
         Cylinder trunk = new Cylinder(trunkRadius, trunkHeight);
         PhongMaterial trunkMaterial = new PhongMaterial();
-        trunkMaterial.setDiffuseColor(Color.SADDLEBROWN);
+        trunkMaterial.setDiffuseColor(Color.rgb(75,50,25));
+        trunkMaterial.setSpecularColor(Color.rgb(75,50,25));
         trunk.setMaterial(trunkMaterial);
         trunk.setTranslateY(-trunkHeight / 2); // Position it properly
 
@@ -23,6 +24,7 @@ public class Tree extends Group {
         Sphere foliage = new Sphere(foliageRadius);
         PhongMaterial foliageMaterial = new PhongMaterial();
         foliageMaterial.setDiffuseColor(Color.rgb(0, 40, 0));
+        foliageMaterial.setSpecularColor(Color.rgb(0, 40, 0));
         foliage.setMaterial(foliageMaterial);
         foliage.setTranslateY(-trunkHeight - foliageRadius); // Sit above trunk
 

@@ -194,7 +194,7 @@ private Group root;
             Tree tree = new Tree(200 + random.nextInt(200), 60 + random.nextInt(60), 160 + random.nextInt(160));
             tree.setTranslateX(x);
             tree.setTranslateZ(z);
-            tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
+            //tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
 
             treeGroup.getChildren().add(tree);
         }
