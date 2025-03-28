@@ -20,9 +20,9 @@ public class StateContext {
     private String xParameter = "NUMBEROFFIELDS";
     private String yParameter = "LINESOFCODE";
     private String zParameter = "NUMBEROFMETHODS";
-    private int xParameterThreshold = 200;
-    private int yParameterThreshold = 800;
-    private int zParameterThreshold = 200;
+    private int xParameterThreshold = 500;
+    private int yParameterThreshold = 500;
+    private int zParameterThreshold = 500;
 
     @Autowired
     private ModelRepository modelRepository;

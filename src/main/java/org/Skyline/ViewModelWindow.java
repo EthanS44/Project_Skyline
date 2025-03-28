@@ -27,7 +27,7 @@ public class ViewModelWindow {
         layout.setHgap(10);
 
         // Dropdown options for parameters
-        String[] options = {"NUMBEROFFIELDS", "LINESOFCODE", "NUMBEROFMETHODS", "CYCLOMATICCOMPLEXITY"};
+        String[] options = {"NUMBEROFFIELDS", "LINESOFCODE", "LINESOFCODENOBLANKS", "NUMBEROFMETHODS", "AVERAGELINESPERMETHOD", "CYCLOMATICCOMPLEXITY", "INHERITANCEDEPTH"};
 
         // X Parameter Dropdown
         Label xLabel = new Label("X Parameter:");
@@ -64,6 +64,10 @@ public class ViewModelWindow {
             stateContext.setXParameterThreshold(Integer.parseInt(xThresholdField.getText()));
             stateContext.setYParameterThreshold(Integer.parseInt(yThresholdField.getText()));
             stateContext.setZParameterThreshold(Integer.parseInt(zThresholdField.getText()));
+
+            stateContext.setXParameter(xComboBox.getValue());
+            stateContext.setYParameter(yComboBox.getValue());
+            stateContext.setZParameter(zComboBox.getValue());
 
             System.out.println("Updated Parameters:");
             System.out.println("X: " + xComboBox.getValue() + ", Threshold: " + xThresholdField.getText());
