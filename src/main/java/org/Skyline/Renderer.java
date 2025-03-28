@@ -16,6 +16,9 @@ import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 
@@ -59,7 +62,8 @@ private Group root;
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         setUp();
-        addBuildings();
+        List<Box> Buildings = createBuildings();
+        placeBuildings(Buildings);
         showRenderer();
     }
 
@@ -174,26 +178,20 @@ private Group root;
     private static final double MIN_BUILDING_Z = 200;  // Min depth
     private static final double MAX_BUILDING_Z = 1200;  // Max depth
 
-    private void addBuildings() {
+    private List<Box> createBuildings() {
         Model model = context.getSelectedModel();
         String xParameter = context.getxParameter();
         String yParameter = context.getyParameter();
         String zParameter = context.getzParameter();
 
-        PhongMaterial buildingMaterial;
+        List<Box> buildings = new ArrayList<>();
         Random random = new Random();
-
-        int currentXPixel = -5000;
-        int previousBuildingWidth = 0;
-        int spacing = 400; // Spacing between buildings
-        boolean sideOfRoad = false;
 
         // Determine the min and max values for attributes
         double minX = Double.MAX_VALUE, maxX = Double.MIN_VALUE;
         double minY = Double.MAX_VALUE, maxY = Double.MIN_VALUE;
         double minZ = Double.MAX_VALUE, maxZ = Double.MIN_VALUE;
 
-        // Find the min and max for each parameter
         for (Attributes attribute : model.getAttributesList()) {
             double xValue = getAttributeFromString(xParameter, attribute);
             double yValue = getAttributeFromString(yParameter, attribute);
@@ -207,32 +205,26 @@ private Group root;
             maxZ = Math.max(maxZ, zValue);
         }
 
-        // Scaling factors for each dimension
         double scaleX = (maxX - minX) > 0 ? (MAX_BUILDING_X - MIN_BUILDING_X) / (maxX - minX) : 1;
         double scaleY = (maxY - minY) > 0 ? (MAX_BUILDING_Y - MIN_BUILDING_Y) / (maxY - minY) : 1;
         double scaleZ = (maxZ - minZ) > 0 ? (MAX_BUILDING_Z - MIN_BUILDING_Z) / (maxZ - minZ) : 1;
 
         for (Attributes attribute : model.getAttributesList()) {
-            sideOfRoad = !sideOfRoad;
-
-            // Set random greyscale shade for the building
-            buildingMaterial = new PhongMaterial();
+            PhongMaterial buildingMaterial = new PhongMaterial();
             double shade = 0.05 + (random.nextDouble() * (0.30 - 0.05));
             buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
             buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
 
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
 
-            // Normalize and scale dimensions
-            double normalizedWidth  = MIN_BUILDING_X + ((getAttributeFromString(xParameter, attribute) - minX) * scaleX);
+            double normalizedWidth = MIN_BUILDING_X + ((getAttributeFromString(xParameter, attribute) - minX) * scaleX);
             double normalizedHeight = MIN_BUILDING_Y + ((getAttributeFromString(yParameter, attribute) - minY) * scaleY);
-            double normalizedDepth  = MIN_BUILDING_Z + ((getAttributeFromString(zParameter, attribute) - minZ) * scaleZ);
+            double normalizedDepth = MIN_BUILDING_Z + ((getAttributeFromString(zParameter, attribute) - minZ) * scaleZ);
 
             attributeBox.setWidth(normalizedWidth);
             attributeBox.setHeight(normalizedHeight);
             attributeBox.setDepth(normalizedDepth);
 
-            // Apply color for buildings exceeding thresholds
             if (normalizedWidth / MULTIPLIER > context.getxParameterThreshold() ||
                     normalizedHeight / MULTIPLIER > context.getyParameterThreshold() ||
                     normalizedDepth / MULTIPLIER > context.getzParameterThreshold()) {
@@ -241,16 +233,28 @@ private Group root;
             }
 
             attributeBox.setMaterial(buildingMaterial);
-            root.getChildren().add(attributeBox);
+            buildings.add(attributeBox);
+        }
+        return buildings;
+    }
 
-            // Alternate buildings on the sides of the road
+    private void placeBuildings(List<Box> buildings) {
+        int currentXPixel = -5000;
+        int spacing = 400;
+        boolean sideOfRoad = false;
+
+        for (Box attributeBox : buildings) {
+            sideOfRoad = !sideOfRoad;
+
             attributeBox.setTranslateZ(sideOfRoad ? (roadWidth / 2 + 20 + (attributeBox.getDepth() / 2))
                     : -(roadWidth / 2 + 20 + (attributeBox.getDepth() / 2)));
             attributeBox.setTranslateY(-attributeBox.getHeight() / 2);
 
-            currentXPixel += attributeBox.getWidth() + previousBuildingWidth + spacing;
+            currentXPixel += attributeBox.getWidth() + spacing;
             attributeBox.setTranslateX(currentXPixel);
-            previousBuildingWidth = (int) attributeBox.getWidth();
+
+
+            root.getChildren().add(attributeBox);
         }
     }
 
@@ -307,6 +311,7 @@ private Group root;
         );
 
     }
+
 
     private void handleCameraMovement2(KeyEvent event, PerspectiveCamera camera) {
         // Initialize the camera variables based on the camera's current position
@@ -504,74 +509,5 @@ private Group root;
                 return 1;
         }
     }
-
-    private void matrixRotateNode(Node n, double Z, double X, double Y){
-        double A11=Math.cos(Z)*Math.cos(Y);
-        double A12=Math.cos(X)*Math.sin(Z)+Math.cos(Z)*Math.sin(X)*Math.sin(Y);
-        double A13=Math.sin(Z)*Math.sin(X)-Math.cos(Z)*Math.cos(X)*Math.sin(Y);
-        double A21=-Math.cos(Y)*Math.sin(Z);
-        double A22=Math.cos(Z)*Math.cos(X)-Math.sin(Z)*Math.sin(X)*Math.sin(Y);
-        double A23=Math.cos(Z)*Math.sin(X)+Math.cos(X)*Math.sin(Z)*Math.sin(Y);
-        double A31=Math.sin(Y);
-        double A32=-Math.cos(Y)*Math.sin(X);
-        double A33=Math.cos(X)*Math.cos(Y);
-
-        double d = Math.acos((A11+A22+A33-1d)/2d);
-        if(d!=0d){
-            double den=2d*Math.sin(d);
-            Point3D p= new Point3D((A32-A23)/den,(A13-A31)/den,(A21-A12)/den);
-            n.setRotationAxis(p);
-            n.setRotate(Math.toDegrees(d));
-        }
-    }
-
-    public static double getYaw(Node n) {
-        double[][] matrix = getRotationMatrix(n);
-        return Math.toDegrees(Math.asin(matrix[2][0])); // Y = asin(A31)
-    }
-
-    // Extract Pitch (X) Angle
-    public static double getPitch(Node n) {
-        double[][] matrix = getRotationMatrix(n);
-        if (Math.abs(matrix[2][0]) < 0.99999) {
-            return Math.toDegrees(Math.atan2(-matrix[2][1], matrix[2][2])); // X = atan2(-A32, A33)
-        } else {
-            return 0; // Gimbal lock case, assume X = 0
-        }
-    }
-
-    // Extract Roll (Z) Angle
-    public static double getRoll(Node n) {
-        double[][] matrix = getRotationMatrix(n);
-        if (Math.abs(matrix[2][0]) < 0.99999) {
-            return Math.toDegrees(Math.atan2(-matrix[1][0], matrix[0][0])); // Z = atan2(-A21, A11)
-        } else {
-            return Math.toDegrees(Math.atan2(matrix[0][1], matrix[1][1])); // Gimbal lock case
-        }
-    }
-
-    // Helper function: Compute rotation matrix from node's rotation axis & angle
-    private static double[][] getRotationMatrix(Node n) {
-        Point3D axis = n.getRotationAxis();
-        double angle = Math.toRadians(n.getRotate());
-
-        if (axis == null || angle == 0) {
-            return new double[][]{
-                    {1, 0, 0},
-                    {0, 1, 0},
-                    {0, 0, 1}
-            }; // Identity matrix (no rotation)
-        }
-
-        double ux = axis.getX(), uy = axis.getY(), uz = axis.getZ();
-        double c = Math.cos(angle), s = Math.sin(angle), t = 1 - c;
-
-        return new double[][]{
-                {t * ux * ux + c,      t * ux * uy - s * uz,  t * ux * uz + s * uy}, // Row 1
-                {t * uy * ux + s * uz, t * uy * uy + c,      t * uy * uz - s * ux}, // Row 2
-                {t * uz * ux - s * uy, t * uz * uy + s * ux, t * uz * uz + c}       // Row 3
-        };
-    }
-
 }
 
