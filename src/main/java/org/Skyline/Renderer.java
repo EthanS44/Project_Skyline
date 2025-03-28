@@ -6,6 +6,8 @@ import javafx.geometry.Point3D;
 import javafx.scene.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.PhongMaterial;
@@ -39,6 +41,10 @@ private double groupAngleX = 0;
 private double groupAngleY = 0;
 private final double groupRotationAmount = 5.0;
 private final double groupMoveAmount = 10.0;
+
+private double startX;
+private double startY;
+private final double rotationSpeed = 0.2;
 
 private final int cameraDistance = 10000;
 
@@ -160,10 +166,36 @@ private Group root;
         //Detect key press and move accordingly
         scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
 
-        //Detect touch event and move accordingly
-        //scene.setOnTouchMoved(event -> handleTouchMovement(event, root));
+        //Detect scroll wheel movements and move accordingly
+        scene.setOnScroll(event -> handleScrollGroupMovement(event, camera));
 
-        //scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
+        scene.setOnMousePressed(event -> {
+            startX = event.getSceneX();
+            startY = event.getSceneY();
+        });
+
+        scene.setOnMouseDragged(event -> {
+            double deltaX = event.getSceneX() - startX;
+            double deltaY = event.getSceneY() - startY;
+
+            // Adjust rotation based on mouse movement
+            groupAngleY -= deltaX * rotationSpeed; // Left/Right movement rotates Y-axis
+            groupAngleX += deltaY * rotationSpeed; // Up/Down movement rotates X-axis (inverted for natural feel)
+
+            // Clamp X-axis rotation to avoid flipping
+            groupAngleX = Math.max(-40, Math.min(45, groupAngleX));
+
+            // Apply rotations
+            root.getTransforms().clear();
+            root.getTransforms().addAll(
+                    new Rotate(groupAngleX, Rotate.X_AXIS),
+                    new Rotate(groupAngleY, Rotate.Y_AXIS)
+            );
+
+            // Update start positions for smoother dragging
+            startX = event.getSceneX();
+            startY = event.getSceneY();
+        });
     }
 
     // Define min and max dimensions for buildings
@@ -173,7 +205,6 @@ private Group root;
     private static final double MAX_BUILDING_Y = 5000; // Max height
     private static final double MIN_BUILDING_Z = 200;  // Min depth
     private static final double MAX_BUILDING_Z = 1200;  // Max depth
-
     private void addBuildings() {
         Model model = context.getSelectedModel();
         String xParameter = context.getxParameter();
@@ -306,6 +337,25 @@ private Group root;
                 new Rotate(groupAngleY, Rotate.Y_AXIS)
         );
 
+    }
+
+    private void handleScrollGroupMovement(ScrollEvent event, PerspectiveCamera camera) {
+        double currentZ = camera.getTranslateZ();
+        double currentY = camera.getTranslateY();
+
+        if (event.getDeltaY() > 0) {
+            // Scroll up = zoom in
+            if (currentY <= 0) {
+                camera.setTranslateZ(currentZ + moveAmount);
+                camera.setTranslateY(currentY + moveAmount);
+            }
+        } else if (event.getDeltaY() < 0) {
+            // Scroll down = zoom out
+            if (currentY >= -45000) {
+                camera.setTranslateZ(currentZ - moveAmount);
+                camera.setTranslateY(currentY - moveAmount);
+            }
+        }
     }
 
     private void handleCameraMovement2(KeyEvent event, PerspectiveCamera camera) {
