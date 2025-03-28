@@ -134,6 +134,7 @@ private Group root;
         Image concreteTextureImage = new Image("concrete_texture.jpeg");
         PhongMaterial concreteMaterial = new PhongMaterial();
         concreteMaterial.setDiffuseMap(concreteTextureImage);
+        concreteMaterial.setDiffuseColor(new Color(0.65, 0.65, 0.65, 1.0));
         concreteMaterial.setSpecularColor(Color.rgb(50, 50, 50));
         concretePad.setMaterial(concreteMaterial);
         concretePad.setTranslateY(-1.5); // Slightly lower than the road
