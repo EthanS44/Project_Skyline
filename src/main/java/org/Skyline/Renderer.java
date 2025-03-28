@@ -18,6 +18,7 @@ import javafx.scene.transform.Scale;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -43,6 +44,10 @@ private double groupAngleY = 0;
 private final double groupRotationAmount = 5.0;
 private final double groupMoveAmount = 10.0;
 
+private double startX;
+private double startY;
+private final double rotationSpeed = 0.2;
+
 private final int cameraDistance = 10000;
 
 private final double roadWidth = 400;
@@ -62,7 +67,8 @@ private Group root;
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         setUp();
-        addBuildings();
+        List<Box> Buildings = createBuildings();
+        placeBuildings(Buildings);
         showRenderer();
     }
 
@@ -163,10 +169,35 @@ private Group root;
         //Detect key press and move accordingly
         scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
 
-        //Detect touch event and move accordingly
-        //scene.setOnTouchMoved(event -> handleTouchMovement(event, root));
+        scene.setOnScroll(event -> handleScrollGroupMovement(event, camera));
 
-        //scene.setOnKeyPressed(event -> handleGroupMovement(event, root, camera));
+        scene.setOnMousePressed(event -> {
+            startX = event.getSceneX();
+            startY = event.getSceneY();
+        });
+
+        scene.setOnMouseDragged(event -> {
+            double deltaX = event.getSceneX() - startX;
+            double deltaY = event.getSceneY() - startY;
+
+            // Adjust rotation based on mouse movement
+            groupAngleY -= deltaX * rotationSpeed; // Left/Right movement rotates Y-axis
+            groupAngleX += deltaY * rotationSpeed; // Up/Down movement now behaves naturally
+
+            // Clamp X-axis rotation to avoid flipping
+            groupAngleX = Math.max(-40, Math.min(45, groupAngleX));
+
+            // Apply rotations
+            root.getTransforms().clear();
+            root.getTransforms().addAll(
+                    new Rotate(groupAngleX, Rotate.X_AXIS),
+                    new Rotate(groupAngleY, Rotate.Y_AXIS)
+            );
+
+            // Update start positions for smoother dragging
+            startX = event.getSceneX();
+            startY = event.getSceneY();
+        });
     }
 
     // Define min and max dimensions for buildings
@@ -184,20 +215,14 @@ private Group root;
         String yParameter = context.getyParameter();
         String zParameter = context.getzParameter();
 
-        PhongMaterial buildingMaterial;
+        List<Box> buildings = new ArrayList<>();
         Random random = new Random();
-
-        int currentXPixel = -5000;
-        int previousBuildingWidth = 0;
-        int spacing = 400; // Spacing between buildings
-        boolean sideOfRoad = false;
 
         // Determine the min and max values for attributes
         double minX = Double.MAX_VALUE, maxX = Double.MIN_VALUE;
         double minY = Double.MAX_VALUE, maxY = Double.MIN_VALUE;
         double minZ = Double.MAX_VALUE, maxZ = Double.MIN_VALUE;
 
-        // Find the min and max for each parameter
         for (Attributes attribute : model.getAttributesList()) {
             double xValue = getAttributeFromString(xParameter, attribute);
             double yValue = getAttributeFromString(yParameter, attribute);
@@ -211,32 +236,26 @@ private Group root;
             maxZ = Math.max(maxZ, zValue);
         }
 
-        // Scaling factors for each dimension
         double scaleX = (maxX - minX) > 0 ? (MAX_BUILDING_X - MIN_BUILDING_X) / (maxX - minX) : 1;
         double scaleY = (maxY - minY) > 0 ? (MAX_BUILDING_Y - MIN_BUILDING_Y) / (maxY - minY) : 1;
         double scaleZ = (maxZ - minZ) > 0 ? (MAX_BUILDING_Z - MIN_BUILDING_Z) / (maxZ - minZ) : 1;
 
         for (Attributes attribute : model.getAttributesList()) {
-            sideOfRoad = !sideOfRoad;
-
-            // Set random greyscale shade for the building
-            buildingMaterial = new PhongMaterial();
+            PhongMaterial buildingMaterial = new PhongMaterial();
             double shade = 0.05 + (random.nextDouble() * (0.30 - 0.05));
             buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
             buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
 
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
 
-            // Normalize and scale dimensions
-            double normalizedWidth  = MIN_BUILDING_X + ((getAttributeFromString(xParameter, attribute) - minX) * scaleX);
+            double normalizedWidth = MIN_BUILDING_X + ((getAttributeFromString(xParameter, attribute) - minX) * scaleX);
             double normalizedHeight = MIN_BUILDING_Y + ((getAttributeFromString(yParameter, attribute) - minY) * scaleY);
-            double normalizedDepth  = MIN_BUILDING_Z + ((getAttributeFromString(zParameter, attribute) - minZ) * scaleZ);
+            double normalizedDepth = MIN_BUILDING_Z + ((getAttributeFromString(zParameter, attribute) - minZ) * scaleZ);
 
             attributeBox.setWidth(normalizedWidth);
             attributeBox.setHeight(normalizedHeight);
             attributeBox.setDepth(normalizedDepth);
 
-            // Apply color for buildings exceeding thresholds
             if (normalizedWidth / MULTIPLIER > context.getxParameterThreshold() ||
                     normalizedHeight / MULTIPLIER > context.getyParameterThreshold() ||
                     normalizedDepth / MULTIPLIER > context.getzParameterThreshold()) {
@@ -245,16 +264,28 @@ private Group root;
             }
 
             attributeBox.setMaterial(buildingMaterial);
-            root.getChildren().add(attributeBox);
+            buildings.add(attributeBox);
+        }
+        return buildings;
+    }
 
-            // Alternate buildings on the sides of the road
+    private void placeBuildings(List<Box> buildings) {
+        int currentXPixel = -5000;
+        int spacing = 400;
+        boolean sideOfRoad = false;
+
+        for (Box attributeBox : buildings) {
+            sideOfRoad = !sideOfRoad;
+
             attributeBox.setTranslateZ(sideOfRoad ? (roadWidth / 2 + 20 + (attributeBox.getDepth() / 2))
                     : -(roadWidth / 2 + 20 + (attributeBox.getDepth() / 2)));
             attributeBox.setTranslateY(-attributeBox.getHeight() / 2);
 
-            currentXPixel += attributeBox.getWidth() + previousBuildingWidth + spacing;
+            currentXPixel += attributeBox.getWidth() + spacing;
             attributeBox.setTranslateX(currentXPixel);
-            previousBuildingWidth = (int) attributeBox.getWidth();
+
+
+            root.getChildren().add(attributeBox);
         }
     }
 
