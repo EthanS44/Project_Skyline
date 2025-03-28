@@ -144,7 +144,6 @@ private Group root;
         concretePad2.setTranslateX(road.getTranslateX()); // Align with the road
         concretePad2.setTranslateZ(road.getTranslateZ()); // Align with the road
 
-
         // Lights and camera
         PointLight light = new PointLight();
         light.setTranslateX(150);
@@ -171,6 +170,39 @@ private Group root;
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
         root = new Group(intersection, road, road2, skybox, grass, concretePad, concretePad2, light, ambientLight, origin);
+
+        final int TREE_NUMBER = 4000;
+        Group treeGroup = new Group();
+        Random random = new Random();
+
+        // Tree setup
+        for (int i = 0; i < TREE_NUMBER; i++) {
+            double x;
+            double z;
+            do {
+                x = random.nextInt(50000);
+                z = random.nextInt(50000);
+            } while (Math.abs(x) < 12000 && Math.abs(z) < 12000);
+
+            if (i % 4 == 1){
+                x = -x;
+            } else if (i % 4 == 2){
+                z = -z;
+            } else if (i % 4 == 3){
+                x = -x;
+                z = -z;
+            }
+
+            Tree tree = new Tree(100 + random.nextInt(100), 30 + random.nextInt(30), 80 + random.nextInt(80));
+            tree.setTranslateX(x);
+            tree.setTranslateZ(z);
+            tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
+
+            treeGroup.getChildren().add(tree);
+        }
+
+        // Add trees as a group for better performance
+        root.getChildren().add(treeGroup);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
