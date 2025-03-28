@@ -15,6 +15,7 @@ CREATE TABLE Models (
 CREATE TABLE Attributes (
                        attribute_id      SERIAL      PRIMARY KEY,
                        model_id      INTEGER     NOT NULL,
+                       attribute_name VARCHAR    NOT NULL,
                        linesOfCode         INTEGER       NOT NULL,
                        linesOfCodeNoBlanks         INTEGER       NOT NULL,
                        numberOfFields         INTEGER       NOT NULL,
