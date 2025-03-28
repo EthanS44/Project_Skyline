@@ -190,7 +190,7 @@ private Group root;
                 z = -z;
             }
 
-            Tree tree = new Tree(100 + random.nextInt(100), 30 + random.nextInt(30), 80 + random.nextInt(80));
+            Tree tree = new Tree(200 + random.nextInt(200), 60 + random.nextInt(60), 160 + random.nextInt(160));
             tree.setTranslateX(x);
             tree.setTranslateZ(z);
             tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
@@ -415,7 +415,7 @@ private Group root;
             }
             case S -> {
                 // move back if it is under maximum
-                if (currentY >= -45000){
+                if (currentY >= -35000){
                     camera.setTranslateZ(currentZ - moveAmount);
                     camera.setTranslateY(currentY - moveAmount);
                 }
@@ -461,7 +461,7 @@ private Group root;
             }
         } else if (event.getDeltaY() < 0) {
             // Scroll down = zoom out
-            if (currentY >= -45000) {
+            if (currentY >= -35000) {
                 camera.setTranslateZ(currentZ - moveAmount);
                 camera.setTranslateY(currentY - moveAmount);
             }
