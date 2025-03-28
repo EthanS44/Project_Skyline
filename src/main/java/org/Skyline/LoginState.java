@@ -1,9 +1,13 @@
 package org.Skyline;
 
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import java.io.IOException;
 
 public class LoginState implements State {
@@ -22,6 +26,17 @@ public class LoginState implements State {
         VBox loginLayout = new VBox(10);
         loginLayout.setPadding(new Insets(20));
 
+        // Create the "Skyline" title text
+        Text skylineText = new Text("SKYLINE");
+        skylineText.setFont(Font.font("Arial", 50));  // Set font and size
+        skylineText.setFill(Color.WHITE);  // White color for the text
+        skylineText.setStyle(" -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.5), 5, 0, 1, 1);");
+
+        // Set alignment of the title (centered)
+        HBox titleContainer = new HBox(skylineText);  // Wrap in HBox to control alignment
+        titleContainer.setAlignment(Pos.CENTER);  // Center the title horizontally
+        titleContainer.setPadding(new Insets(20, 0, 20, 0));  // Optional: Padding around the title
+
         // Create labels and text fields for username and password
         Label usernameLabel = new Label("Username:");
         TextField usernameField = new TextField();
@@ -34,6 +49,7 @@ public class LoginState implements State {
         // Create login and guest buttons
         Button loginButton = new Button("Login");
         Button registerButton = new Button("Register");
+        Button quitButton = new Button("Quit");
 
         // Error message label (hidden initially)
         errorLabel = new Label();
@@ -52,13 +68,28 @@ public class LoginState implements State {
             context.executeAction("register");
         });
 
-        // Add all UI elements to the layout
-        loginLayout.getChildren().addAll(usernameLabel, usernameField, passwordLabel, passwordField, loginButton, registerButton, errorLabel);
+        quitButton.setOnAction(event -> {System.exit(0);});
 
-        // Assuming the Stage is handled by StateContext or elsewhere
-        Scene loginScene = new Scene(loginLayout, 400, 300);
+        // Add all UI elements to the layout
+        loginLayout.getChildren().addAll(titleContainer, usernameLabel, usernameField, passwordLabel, passwordField, loginButton, registerButton, errorLabel, quitButton);
+
+        // Create the background image (cityscape image)
+        BackgroundImage backgroundImage = new BackgroundImage(
+                new javafx.scene.image.Image("city_background.png"),  // Replace with actual image path or URL
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundRepeat.NO_REPEAT,
+                BackgroundPosition.CENTER,
+                new BackgroundSize(100, 100, true, true, true, true)
+        );
+
+        // Set the background image for the login layout
+        loginLayout.setBackground(new Background(backgroundImage));
+
+        // Create the scene with the root layout and set it on the primaryStage
+        Scene loginScene = new Scene(loginLayout, 600, 400);
         context.getPrimaryStage().setScene(loginScene);
         context.getPrimaryStage().setTitle("Skyline Login");
+        context.getPrimaryStage().setResizable(false);
         context.getPrimaryStage().show();
     }
 

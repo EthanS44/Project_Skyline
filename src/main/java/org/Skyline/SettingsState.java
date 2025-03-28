@@ -1,9 +1,7 @@
 package org.Skyline;
 
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -23,6 +21,29 @@ public class SettingsState implements State {
 
     @Override
     public void showUI() {
+        // Create MenuBar
+        MenuBar menuBar = new MenuBar();
+
+        // Create the File menu with a Logout option
+        Menu fileMenu = new Menu("Options");
+        MenuItem logoutMenuItem = new MenuItem("Logout");
+
+        // Add main menu option
+        MenuItem mainMenuItem = new MenuItem("Main Menu");
+
+        // Add main menu option
+        MenuItem quitMenuItem = new MenuItem("Quit");
+
+        // Add the logout action to the menu items
+        logoutMenuItem.setOnAction(event -> handleAction("Logout"));
+        mainMenuItem.setOnAction(event -> handleAction("Main Menu"));
+        quitMenuItem.setOnAction(event -> handleAction("Quit"));
+
+        fileMenu.getItems().add(logoutMenuItem);
+        fileMenu.getItems().add(mainMenuItem);
+        fileMenu.getItems().add(quitMenuItem);
+        menuBar.getMenus().add(fileMenu);
+
         // Create settings UI
         VBox settingsLayout = new VBox(10);
         settingsLayout.setPadding(new javafx.geometry.Insets(10));
@@ -55,6 +76,18 @@ public class SettingsState implements State {
         // Example: Handle other possible actions, like saving settings
         if (action.equals("applySettings")) {
             applySettings();
+        }else if (action.equals("Logout")) {
+            // Handle logout logic
+            System.out.println("Logging out...");
+            context.setState(new LoginState(context)); // Transition to login state
+        }   else if (action.equals("Main Menu")) {
+            // Handle logout logic
+            System.out.println("Going to Main Menu...");
+            context.setState(new MainMenuState(context)); // Transition to main menu state
+        }else if (action.equals("Quit")) {
+            // Handle logout logic
+            System.out.println("Quiting Application...");
+            System.exit(0);
         }
     }
 

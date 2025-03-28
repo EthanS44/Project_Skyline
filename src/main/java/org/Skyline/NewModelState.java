@@ -1,9 +1,7 @@
 package org.Skyline;
 
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
@@ -28,6 +26,29 @@ public class NewModelState implements State {
 
     @Override
     public void showUI() {
+        // Create MenuBar
+        MenuBar menuBar = new MenuBar();
+
+        // Create the File menu with a Logout option
+        Menu fileMenu = new Menu("Options");
+        MenuItem logoutMenuItem = new MenuItem("Logout");
+
+        // Add main menu option
+        MenuItem mainMenuItem = new MenuItem("Main Menu");
+
+        // Add main menu option
+        MenuItem quitMenuItem = new MenuItem("Quit");
+
+        // Add the logout action to the menu items
+        logoutMenuItem.setOnAction(event -> handleAction("Logout"));
+        mainMenuItem.setOnAction(event -> handleAction("Main Menu"));
+        quitMenuItem.setOnAction(event -> handleAction("Quit"));
+
+        fileMenu.getItems().add(logoutMenuItem);
+        fileMenu.getItems().add(mainMenuItem);
+        fileMenu.getItems().add(quitMenuItem);
+        menuBar.getMenus().add(fileMenu);
+
         // Create the layout for the new model UI
         VBox layout = new VBox(10);
         layout.setPadding(new javafx.geometry.Insets(10));
@@ -47,11 +68,7 @@ public class NewModelState implements State {
         Button cppButton = new Button("Create C++ Model");
         cppButton.setOnAction(event -> selectLanguageAndCreateModel("C++"));
 
-        // Back button to return to the Main Menu
-        Button backButton = new Button("Back");
-        backButton.setOnAction(event -> context.setState(new MainMenuState(context)));
-
-        layout.getChildren().addAll(packageLabel, packageNameTextField, javaButton, pythonButton, cppButton, backButton);
+        layout.getChildren().addAll(packageLabel, packageNameTextField, javaButton, pythonButton, cppButton);
 
         // Set up the scene and stage
         Scene scene = new Scene(layout, 300, 250);
@@ -62,7 +79,19 @@ public class NewModelState implements State {
 
     @Override
     public void handleAction(String action) {
-
+        if (action.equals("Logout")) {
+            // Handle logout logic
+            System.out.println("Logging out...");
+            context.setState(new LoginState(context)); // Transition to login state
+        }   else if (action.equals("Main Menu")) {
+            // Handle logout logic
+            System.out.println("Going to Main Menu...");
+            context.setState(new MainMenuState(context)); // Transition to main menu state
+        }else if (action.equals("Quit")) {
+            // Handle logout logic
+            System.out.println("Quiting Application...");
+            System.exit(0);
+        }
     }
 
     private void selectLanguageAndCreateModel(String language) {
