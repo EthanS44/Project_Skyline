@@ -326,11 +326,20 @@ private Group root;
     }
 
     private void placeBuildings(List<Box> buildings) {
+        int currentXPixelNegative = 0;
+        int currentZPixelNegative = 0;
+        int currentZPixelPositive = 0;
+
         int currentXPixelPositive = (int) (600 + buildings.get(0).getWidth()); // Start at the intersection for the positive X-axis
-        int currentXPixelNegative = (int) (600 + buildings.get(1).getWidth()); // Start at the intersection for the negative X-axis
-        int currentZPixelPositive = (int) (600 + buildings.get(2).getDepth()); // Start at the intersection for the positive Z-axis
-        int currentZPixelNegative = (int) (600 + buildings.get(3).getDepth()); // Start at the intersection for the negative Z-axis
-        int spacing = 800; // Space between buildings
+        if (buildings.size() > 1) {
+            currentXPixelNegative = (int) (600 + buildings.get(1).getWidth()); // Start at the intersection for the negative X-axis
+        }if (buildings.size() > 2) {
+            currentZPixelPositive = (int) (600 + buildings.get(2).getDepth()); // Start at the intersection for the positive Z-axis
+        }
+        if (buildings.size() > 3) {
+            currentZPixelNegative = (int) (600 + buildings.get(3).getDepth()); // Start at the intersection for the negative Z-axis
+        }
+            int spacing = 800; // Space between buildings
         boolean sideOfRoad = false; // For alternating side of the road
         boolean positiveDirection = true; // For alternating between positive and negative directions
         int count = 0; // To count buildings for toggling sides every two buildings
