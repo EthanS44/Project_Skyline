@@ -4,7 +4,6 @@ import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -210,34 +209,6 @@ private Group root;
         });
 
         scene.setOnMouseDragged(event -> handleDragGroupMovement(event, root));
-
-        /*
-        scene.setOnMouseDragged(event -> {
-            double deltaX = event.getSceneX() - startX;
-            double deltaY = event.getSceneY() - startY;
-
-            // Adjust rotation based on mouse movement
-            groupAngleY -= deltaX * rotationSpeed; // Left/Right movement rotates Y-axis
-            groupAngleX += deltaY * rotationSpeed; // Up/Down movement now behaves naturally
-
-            // Clamp X-axis rotation to avoid flipping
-            groupAngleX = Math.max(-40, Math.min(45, groupAngleX));
-
-            // Apply rotations
-            root.getTransforms().clear();
-            root.getTransforms().addAll(
-                    new Rotate(groupAngleX, Rotate.X_AXIS),
-                    new Rotate(groupAngleY, Rotate.Y_AXIS)
-            );
-
-            // Update start positions for smoother dragging
-            startX = event.getSceneX();
-            startY = event.getSceneY();
-        });
-
-         */
-
-
     }
 
 
