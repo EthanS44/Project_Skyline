@@ -319,7 +319,7 @@ private Group root;
     }
 
     private void slabSetup(int slabSize){
-        Box concretePad = new Box(slabSize*Math.sqrt(2) + 200, 0, slabSize*Math.sqrt(2) + 200); // diagonal is same length as building range
+        Box concretePad = new Box(slabSize*2 + 200, 0, slabSize*2 + 200); // diagonal is same length as building range
         Image concreteTextureImage = new Image("concrete_texture.jpeg");
         PhongMaterial concreteMaterial = new PhongMaterial();
         concreteMaterial.setDiffuseMap(concreteTextureImage);
@@ -327,8 +327,6 @@ private Group root;
         concreteMaterial.setSpecularColor(Color.rgb(50, 50, 50));
         concretePad.setMaterial(concreteMaterial);
         concretePad.setTranslateY(-1.5); // Slightly lower than the road
-        Rotate padRotate = new Rotate(45, Rotate.Y_AXIS);
-        concretePad.getTransforms().add(padRotate);
         //concretePad.setTranslateX(road.getTranslateX()); // Align with the road
         //concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
         root.getChildren().add(concretePad);
@@ -342,11 +340,13 @@ private Group root;
         for (int i = 0; i < numberOfTrees; i++) {
             double x;
             double z;
+            // keep generating x and z until a valid coordinate is found (50000 is skybox limit, 200 is buffer area)
             do {
                 x = random.nextInt(50000);
                 z = random.nextInt(50000);
-            } while (Math.abs(x) < cityBound && Math.abs(z) < cityBound);
+            } while ((x < cityBound + 200) && (z < cityBound + 200));
 
+            // distribute the trees evenly among the four quadrants
             if (i % 4 == 1){
                 x = -x;
             } else if (i % 4 == 2){
@@ -356,10 +356,10 @@ private Group root;
                 z = -z;
             }
 
+            // create tree and place at determined location
             Tree tree = new Tree(200 + random.nextInt(200), 60 + random.nextInt(60), 160 + random.nextInt(160));
             tree.setTranslateX(x);
             tree.setTranslateZ(z);
-            //tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
 
             treeGroup.getChildren().add(tree);
 
