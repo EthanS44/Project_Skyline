@@ -6,7 +6,7 @@ CREATE TABLE Users (
 
 CREATE TABLE Models (
                           model_id      SERIAL      PRIMARY KEY,
-                          model_name      VARCHAR     NOT NULL Unique,
+                          model_name      VARCHAR     NOT NULL,
                           username         VARCHAR       NOT NULL,
                           FOREIGN KEY (username)
                               REFERENCES Users (username)
@@ -28,3 +28,6 @@ CREATE TABLE Attributes (
                        FOREIGN KEY (model_id)
                            REFERENCES Models (model_id)
 );
+
+
+
