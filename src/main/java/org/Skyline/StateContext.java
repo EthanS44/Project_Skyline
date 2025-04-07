@@ -9,7 +9,7 @@ import javafx.collections.ObservableList;
 
 import java.util.*;
 
-@Component
+
 public class StateContext {
     private State currentState;
     private Stage primaryStage;
@@ -24,8 +24,6 @@ public class StateContext {
     private int yParameterThreshold = 500;
     private int zParameterThreshold = 500;
 
-    @Autowired
-    private ModelRepository modelRepository;
 
     public StateContext(Stage primaryStage){
         this.primaryStage = primaryStage;
@@ -50,8 +48,6 @@ public class StateContext {
     public String getCurrentUser(){
         return currentUser;
     }
-
-    public ModelRepository getModelRepository(){return this.modelRepository;}
 
     public void setSelectedModel(Model selectedModel){
         this.selectedModel = selectedModel;

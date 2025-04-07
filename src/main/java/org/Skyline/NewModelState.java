@@ -16,12 +16,10 @@ public class NewModelState implements State {
     private final Stage stage;
     private TextField packageNameTextField;
     private PackageParser packageParser;
-    private ModelRepository modelRepository;
 
-    NewModelState(StateContext context, ModelRepository modelRepository) {
+    NewModelState(StateContext context) {
         this.context = context;
         this.stage = new Stage();
-        this.modelRepository = modelRepository;
     }
 
     @Override
@@ -138,6 +136,6 @@ public class NewModelState implements State {
         context.getDatabaseManager().saveModel(newModel);
 
         // Transition to the Model List after processing
-        context.setState(new ModelListState(context, modelRepository));
+        context.setState(new ModelListState(context));
     }
 }
