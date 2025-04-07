@@ -58,6 +58,8 @@ private final double roadWidth = 300;
 
 private final int MULTIPLIER = 10;
 
+private final int TREE_NUMBER = 4000;
+
 private Stage primaryStage;
 private StateContext context;
 private Scene scene;
@@ -72,7 +74,11 @@ private Group root;
         this.primaryStage = primaryStage;
         setUp();
         List<Box> Buildings = createBuildings();
-        placeBuildings(Buildings);
+        // size is equal to the position of the furthest building from the origin.
+        int size = placeBuildings(Buildings);
+        slabSetup(size);
+        roadSetup(size);
+        treeSetup(TREE_NUMBER, size);
         showRenderer();
     }
 
@@ -88,34 +94,6 @@ private Group root;
         intersection.setMaterial(intersectionMaterial);
         intersection.setTranslateY(-4.5);
 
-        // Roads setup
-        Box road = new Box(2200, 0, roadWidth);
-        Image roadTexture = new Image("road_texture.jpg");
-        PhongMaterial roadMaterial = new PhongMaterial();
-        roadMaterial.setDiffuseMap(roadTexture);
-        roadMaterial.setSpecularMap(roadTexture);
-        road.getTransforms().add(new Scale(1, 1, 1));
-        road.setMaterial(roadMaterial);
-        road.setScaleX(10);
-        road.setScaleY(1);
-        road.setScaleZ(1);
-
-        // Roads setup
-        Box road2 = new Box(roadWidth, 0, 2200);
-        Image road2Texture = new Image("road_texture2.jpg");
-        PhongMaterial road2Material = new PhongMaterial();
-        road2Material.setDiffuseMap(road2Texture);
-        road2Material.setSpecularMap(road2Texture);
-        road2.getTransforms().add(new Scale(1, 1, 1));
-        road2.setMaterial(road2Material);
-        road2.setScaleX(1);
-        road2.setScaleY(1);
-        road2.setScaleZ(10);
-
-        // Position road on top of the concrete pad
-        road.setTranslateY(-3);
-        road2.setTranslateY(-3);
-
         Sphere origin = new Sphere(10);
         PhongMaterial originmaterial = new PhongMaterial();
         originmaterial.setDiffuseColor(Color.BLACK);
@@ -128,19 +106,6 @@ private Group root;
         grassMaterial.setDiffuseMap(grassTextureImage);
         grassMaterial.setSpecularColor(Color.DARKGREEN);
         grass.setMaterial(grassMaterial);
-
-        // Concrete pad setup
-        Box concretePad = new Box(23000, 0, 23000); // Same length as road, 3x wider, small height
-        Image concreteTextureImage = new Image("concrete_texture.jpeg");
-        PhongMaterial concreteMaterial = new PhongMaterial();
-        concreteMaterial.setDiffuseMap(concreteTextureImage);
-        concreteMaterial.setDiffuseColor(new Color(0.65, 0.65, 0.65, 1.0));
-        concreteMaterial.setSpecularColor(Color.rgb(50, 50, 50));
-        concretePad.setMaterial(concreteMaterial);
-        concretePad.setTranslateY(-1.5); // Slightly lower than the road
-        concretePad.setTranslateX(road.getTranslateX()); // Align with the road
-        concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
-
 
         // Lights and camera
         PointLight light = new PointLight();
@@ -167,40 +132,8 @@ private Group root;
         skybox.setMaterial(skyMaterial);
         skybox.setCullFace(CullFace.FRONT); // Render the inside of the sphere
 
-        root = new Group(intersection, road, road2, skybox, grass, concretePad, light, ambientLight, origin);
+        root = new Group(intersection, skybox, grass, light, ambientLight, origin);
 
-        final int TREE_NUMBER = 4000;
-        Group treeGroup = new Group();
-        Random random = new Random();
-
-        // Tree setup
-        for (int i = 0; i < TREE_NUMBER; i++) {
-            double x;
-            double z;
-            do {
-                x = random.nextInt(50000);
-                z = random.nextInt(50000);
-            } while (Math.abs(x) < 12000 && Math.abs(z) < 12000);
-
-            if (i % 4 == 1){
-                x = -x;
-            } else if (i % 4 == 2){
-                z = -z;
-            } else if (i % 4 == 3){
-                x = -x;
-                z = -z;
-            }
-
-            Tree tree = new Tree(200 + random.nextInt(200), 60 + random.nextInt(60), 160 + random.nextInt(160));
-            tree.setTranslateX(x);
-            tree.setTranslateZ(z);
-            //tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
-
-            treeGroup.getChildren().add(tree);
-        }
-
-        // Add trees as a group for better performance
-        root.getChildren().add(treeGroup);
 
         // Assign scene to the class-level variable
         scene = new Scene(root, 1000, 800, true);
@@ -325,12 +258,12 @@ private Group root;
         return buildings;
     }
 
-    private void placeBuildings(List<Box> buildings) {
+    private int placeBuildings(List<Box> buildings) {
         int currentXPixelNegative = 0;
         int currentZPixelNegative = 0;
         int currentZPixelPositive = 0;
-
         int currentXPixelPositive = (int) (600 + buildings.get(0).getWidth()); // Start at the intersection for the positive X-axis
+
         if (buildings.size() > 1) {
             currentXPixelNegative = (int) (600 + buildings.get(1).getWidth()); // Start at the intersection for the negative X-axis
         }if (buildings.size() > 2) {
@@ -339,7 +272,7 @@ private Group root;
         if (buildings.size() > 3) {
             currentZPixelNegative = (int) (600 + buildings.get(3).getDepth()); // Start at the intersection for the negative Z-axis
         }
-            int spacing = 800; // Space between buildings
+        int spacing = 800; // Space between buildings
         boolean sideOfRoad = false; // For alternating side of the road
         boolean positiveDirection = true; // For alternating between positive and negative directions
         int count = 0; // To count buildings for toggling sides every two buildings
@@ -383,6 +316,9 @@ private Group root;
 
             count++; // Increment counter for alternating the side of the road
         }
+        int maxX = Math.max(currentXPixelNegative, currentXPixelPositive);
+        int maxZ = Math.max(currentZPixelNegative, currentZPixelPositive);
+        return Math.max(maxX, maxZ);
     }
 
     /*private void placeBuildings2(List<Box> buildings) {
@@ -404,6 +340,87 @@ private Group root;
             root.getChildren().add(attributeBox);
         }
     }*/
+
+    private void roadSetup(int roadLength){
+        // Roads setup
+        Box road = new Box(roadLength*2, 0, roadWidth);
+        Image roadTexture = new Image("road_texture.jpg");
+        PhongMaterial roadMaterial = new PhongMaterial();
+        roadMaterial.setDiffuseMap(roadTexture);
+        roadMaterial.setSpecularMap(roadTexture);
+        road.getTransforms().add(new Scale(1, 1, 1));
+        road.setMaterial(roadMaterial);
+        //road.setScaleX(10);
+        road.setScaleY(1);
+        road.setScaleZ(1);
+
+        // Roads setup
+        Box road2 = new Box(roadWidth, 0, roadLength*2);
+        Image road2Texture = new Image("road_texture2.jpg");
+        PhongMaterial road2Material = new PhongMaterial();
+        road2Material.setDiffuseMap(road2Texture);
+        road2Material.setSpecularMap(road2Texture);
+        road2.getTransforms().add(new Scale(1, 1, 1));
+        road2.setMaterial(road2Material);
+        road2.setScaleX(1);
+        road2.setScaleY(1);
+        //road2.setScaleZ(10);
+
+        // Position road on top of the concrete pad
+        road.setTranslateY(-3);
+        road2.setTranslateY(-3);
+
+        root.getChildren().addAll(road, road2);
+    }
+
+    private void slabSetup(int slabSize){
+        Box concretePad = new Box(slabSize*Math.sqrt(2) + 200, 0, slabSize*Math.sqrt(2) + 200); // diagonal is same length as building range
+        Image concreteTextureImage = new Image("concrete_texture.jpeg");
+        PhongMaterial concreteMaterial = new PhongMaterial();
+        concreteMaterial.setDiffuseMap(concreteTextureImage);
+        concreteMaterial.setDiffuseColor(new Color(0.65, 0.65, 0.65, 1.0));
+        concreteMaterial.setSpecularColor(Color.rgb(50, 50, 50));
+        concretePad.setMaterial(concreteMaterial);
+        concretePad.setTranslateY(-1.5); // Slightly lower than the road
+        Rotate padRotate = new Rotate(45, Rotate.Y_AXIS);
+        concretePad.getTransforms().add(padRotate);
+        //concretePad.setTranslateX(road.getTranslateX()); // Align with the road
+        //concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
+        root.getChildren().add(concretePad);
+    }
+
+    private void treeSetup(int numberOfTrees, int cityBound){
+        Group treeGroup = new Group();
+        Random random = new Random();
+
+        // Tree setup
+        for (int i = 0; i < numberOfTrees; i++) {
+            double x;
+            double z;
+            do {
+                x = random.nextInt(50000);
+                z = random.nextInt(50000);
+            } while (Math.abs(x) < cityBound && Math.abs(z) < cityBound);
+
+            if (i % 4 == 1){
+                x = -x;
+            } else if (i % 4 == 2){
+                z = -z;
+            } else if (i % 4 == 3){
+                x = -x;
+                z = -z;
+            }
+
+            Tree tree = new Tree(200 + random.nextInt(200), 60 + random.nextInt(60), 160 + random.nextInt(160));
+            tree.setTranslateX(x);
+            tree.setTranslateZ(z);
+            //tree.setTranslateY(-tree.getHeight() / 2); // Adjust to ground level
+
+            treeGroup.getChildren().add(tree);
+
+        }
+        root.getChildren().add(treeGroup);
+    }
 
     private void showRenderer() {
         primaryStage.setScene(scene);
