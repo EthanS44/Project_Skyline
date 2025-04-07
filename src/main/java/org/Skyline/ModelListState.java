@@ -16,13 +16,11 @@ public class ModelListState implements State {
     private StateContext context;
     private ListView<Model> modelListView;
     private ObservableList<Model> modelList;
-    private ModelRepository modelRepository;
     private DatabaseManager databaseManager;
 
 
-    public ModelListState(StateContext context, ModelRepository modelRepository) {
+    public ModelListState(StateContext context) {
         this.context = context;
-        //this.modelRepository = modelRepository;
         DatabaseManager databaseManager = context.getDatabaseManager();
         context.setModelList(databaseManager.getModelsByUser(context.getCurrentUser()));
         this.modelList = FXCollections.observableArrayList(context.getModelList());
@@ -129,7 +127,7 @@ public class ModelListState implements State {
             System.out.println("Models sorted");
         } else if (action.equals("newModel")) {
             // Handle new model logic
-            context.setState(new NewModelState(context, context.getModelRepository()));
+            context.setState(new NewModelState(context));
         } else if (action.equals("updateModel")) {
             // Handle model deletion logic
             Model selectedModel = modelListView.getSelectionModel().getSelectedItem();
@@ -138,7 +136,7 @@ public class ModelListState implements State {
                 databaseManager.deleteModelByName(selectedModel.getName()); //delete model from the database
                 modelList.remove(selectedModel); // Remove the selected model from the list
             }
-            context.setState(new NewModelState(context, context.getModelRepository()));
+            context.setState(new NewModelState(context));
         }else if (action.equals("Logout")) {
             // Handle logout logic
             System.out.println("Logging out...");
