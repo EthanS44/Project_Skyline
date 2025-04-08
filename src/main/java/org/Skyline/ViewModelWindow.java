@@ -28,7 +28,13 @@ public class ViewModelWindow {
         layout.setHgap(10);
 
         // Dropdown options for parameters
-        String[] options = {"NUMBEROFFIELDS", "LINESOFCODE", "LINESOFCODENOBLANKS", "NUMBEROFMETHODS", "AVERAGELINESPERMETHOD", "CYCLOMATICCOMPLEXITY", "INHERITANCEDEPTH"};
+        String[] options = {"NUMBER OF FIELDS",
+                "LINES OF CODE",
+                "LINES OF CODE NO BLANKS",
+                "NUMBER OF METHODS",
+                "AVERAGE LINES PER METHOD",
+                "CYCLOMATIC COMPLEXITY",
+                "INHERITANCE DEPTH"};
 
         // X Parameter Dropdown
         Label xLabel = new Label("X Parameter:");

@@ -11,9 +11,9 @@ public class StateContext {
     private Model selectedModel;
     private ArrayList<Model> modelList;
     private DatabaseManager databaseManager;
-    private String xParameter = "NUMBEROFFIELDS";
-    private String yParameter = "LINESOFCODE";
-    private String zParameter = "NUMBEROFMETHODS";
+    private String xParameter = "NUMBER OF FIELDS";
+    private String yParameter = "LINES OF CODE";
+    private String zParameter = "NUMBER OF METHODS";
     private int xParameterThreshold = 500;
     private int yParameterThreshold = 500;
     private int zParameterThreshold = 500;

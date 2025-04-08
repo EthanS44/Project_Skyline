@@ -5,7 +5,6 @@ import java.io.IOException;
 
 public class PasswordManagement {
     private static DatabaseManager databaseManager = new DatabaseManager();
-    private static final String PASSWORD_FILE = "src/main/resources/password.properties";
     // Hashes a password and returns the hash
     public static String hashPassword(String password){
         return BCrypt.hashpw(password, BCrypt.gensalt(12));

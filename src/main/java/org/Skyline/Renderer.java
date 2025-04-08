@@ -504,23 +504,23 @@ private Group root;
 
     private int getAttributeFromString(String attribute, Attributes attributes){
         switch (attribute) {
-            case "LINESOFCODE":
+            case "LINES OF CODE":
                 return attributes.getLinesOfCode();
-            case "LINESOFCODENOBLANKS":
+            case "LINES OF CODE NO BLANKS":
                 return attributes.getLinesOfCodeNoBlanks();
-            case "NUMBEROFFIELDS":
+            case "NUMBER OF FIELDS":
                 return attributes.getNumberOfFields();
-            case "NUMBEROFMETHODS":
+            case "NUMBER OF METHODS":
                 return attributes.getNumberOfMethods();
-            case "AVERAGELINESPERMETHOD":
+            case "AVERAGE LINES PER METHOD":
                 return (int) attributes.getAverageLinesPerMethod();
-            case "MAXCYCLOMATICCOMPLEXITY":
+            case "MAX CYCLOMATIC COMPLEXITY":
                 return attributes.getMaxCyclomaticComplexity();
-            case "INHERITANCEDEPTH":
+            case "INHERITANCE DEPTH":
                 return attributes.getInheritanceDepth();
-            case "NUMBEROFASSOCIATIONS":
+            case "NUMBER OF ASSOCIATIONS":
                 return attributes.getNumberOfAssociations();
-            case "NUMBEROFIMPORTS":
+            case "NUMBER OF IMPORTS":
                 return attributes.getNumberOfImports();
             default:
                 return 1;
