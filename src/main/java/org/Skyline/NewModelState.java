@@ -123,6 +123,22 @@ public class NewModelState implements State {
             return;
         }
 
+        // Show an alert that the package is being parsed
+        Alert loadingMessage = new Alert(Alert.AlertType.WARNING);
+        loadingMessage.setTitle("Loading Model");
+        loadingMessage.setContentText("Your Package is Being Parsed. Please Wait...");
+        loadingMessage.show();
+
+        // Disable the close (X) button and ESC key for alert window
+        Stage stage = (Stage) loadingMessage.getDialogPane().getScene().getWindow();
+        stage.setOnCloseRequest(event -> event.consume()); // Disable X button
+
+        loadingMessage.getDialogPane().getScene().getWindow().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                event.consume(); // Disable ESC key
+            }
+        });
+
         // Parse the selected package and create the model
         Model newModel = packageParser.parsePackage(directory, context.getCurrentUser());
         newModel.setName(packageName);
@@ -130,6 +146,9 @@ public class NewModelState implements State {
 
         // Save the model to the database
         context.getDatabaseManager().saveModel(newModel);
+
+        // close the loading window once parsing is complete
+        loadingMessage.close();
 
         // Transition to the Model List after processing
         context.setState(new ModelListState(context));
