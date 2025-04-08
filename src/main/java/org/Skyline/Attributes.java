@@ -1,11 +1,7 @@
 package org.Skyline;
 
-import jakarta.persistence.*;
-
-@Entity
 public class Attributes {
-    @Id
-    @GeneratedValue(strategy= GenerationType.AUTO)
+
     private long id;
     private String name;
     private String user;
@@ -20,12 +16,6 @@ public class Attributes {
     private int numberOfImports = 0;
     private String classPackage = "";
 
-    /*
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<String> associations = new ArrayList<String>();
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    private List<String> imports = new ArrayList<String>();
-    */
 
     public Attributes(String user){
         this.user = user;

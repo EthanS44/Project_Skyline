@@ -1,8 +1,6 @@
 package org.Skyline;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public abstract class CodeParser {
     public abstract boolean isValidClass(String code);

@@ -1,13 +1,11 @@
 package org.Skyline;
-import javafx.scene.*;
+
 import javafx.stage.Stage;
 
 public class ModelViewState implements State {
 
     private StateContext context;
     private Stage primaryStage;
-    private Scene scene;
-    private Group root;
 
     public ModelViewState(StateContext context) {
         this.context = context;
@@ -17,11 +15,7 @@ public class ModelViewState implements State {
     @Override
     public void showUI() {
         System.out.println("Displaying Model View with interactive controls");
-
-        // JavaFX must be launched properly
-        //new Thread(() -> Application.launch(ModelViewState.class)).start();
         Renderer renderer = new Renderer(context);
-
         renderer.start(primaryStage);
     }
 

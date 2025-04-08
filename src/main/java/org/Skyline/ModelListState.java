@@ -1,23 +1,18 @@
 package org.Skyline;
 
-import jakarta.annotation.PostConstruct;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.Comparator;
-import java.util.List;
 
 public class ModelListState implements State {
     private StateContext context;
     private ListView<Model> modelListView;
     private ObservableList<Model> modelList;
     private DatabaseManager databaseManager;
-
 
     public ModelListState(StateContext context) {
         this.context = context;
@@ -27,7 +22,6 @@ public class ModelListState implements State {
         this.databaseManager = new DatabaseManager();
     }
 
-
     @Override
     public void showUI() {
         // Create MenuBar
@@ -36,11 +30,7 @@ public class ModelListState implements State {
         // Create the File menu with a Logout option
         Menu fileMenu = new Menu("Options");
         MenuItem logoutMenuItem = new MenuItem("Logout");
-
-        // Add main menu option
         MenuItem mainMenuItem = new MenuItem("Main Menu");
-
-        // Add main menu option
         MenuItem quitMenuItem = new MenuItem("Quit");
 
         // Add the logout action to the menu items
@@ -48,9 +38,7 @@ public class ModelListState implements State {
         mainMenuItem.setOnAction(event -> handleAction("Main Menu"));
         quitMenuItem.setOnAction(event -> handleAction("Quit"));
 
-        fileMenu.getItems().add(logoutMenuItem);
-        fileMenu.getItems().add(mainMenuItem);
-        fileMenu.getItems().add(quitMenuItem);
+        fileMenu.getItems().addAll(logoutMenuItem, mainMenuItem, quitMenuItem);
         menuBar.getMenus().add(fileMenu);
 
         // Create ListView to display models
@@ -82,19 +70,18 @@ public class ModelListState implements State {
 
         // Create the background image (cityscape image)
         BackgroundImage backgroundImage = new BackgroundImage(
-                new javafx.scene.image.Image("city_background.png"),  // Replace with actual image path or URL
+                new Image("city_background.png"),  // Replace with actual image path or URL
                 BackgroundRepeat.NO_REPEAT,
                 BackgroundRepeat.NO_REPEAT,
                 BackgroundPosition.CENTER,
                 new BackgroundSize(100, 100, true, true, true, true)
         );
 
-        // Set the background image for the login layout
+        // Set the background image for the layout
         layout.setBackground(new Background(backgroundImage));
 
-
-        // Create a new Scene with the updated root layout (BorderPane)
-        Scene scene = new Scene(root, 600, 400);  // Set root as BorderPane to avoid issues with VBox
+        // Create a new Scene with the updated root layout
+        Scene scene = new Scene(root, 600, 400);
         context.getPrimaryStage().setScene(scene);
         context.getPrimaryStage().setTitle("Model List");
         context.getPrimaryStage().show();
@@ -103,51 +90,62 @@ public class ModelListState implements State {
     @Override
     public void handleAction(String action) {
         if (action.equals("viewModel")) {
-            // Handle model view logic
-            // Open window for user to set parameters and thresholds
             new ViewModelWindow(context).show();
-            // Transition to view model state
             context.setSelectedModel(modelListView.getSelectionModel().getSelectedItem());
             if (context.getSelectedModel() != null) {
                 System.out.println("Viewing model: " + context.getSelectedModel());
-
                 context.setState(new ModelViewState(context));
             }
         } else if (action.equals("deleteModel")) {
-            // Handle model deletion logic
             Model selectedModel = modelListView.getSelectionModel().getSelectedItem();
             if (selectedModel != null) {
-                System.out.println("Deleting model: " + selectedModel);
-                databaseManager.deleteModelByName(selectedModel.getName()); //delete model from the database
-                modelList.remove(selectedModel); // Remove the selected model from the list
+                Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmation.setTitle("Confirm Deletion");
+                confirmation.setHeaderText("Are you sure you want to delete this model?");
+                confirmation.setContentText("Model: " + selectedModel.getName());
+
+                confirmation.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        System.out.println("Deleting model: " + selectedModel);
+                        databaseManager.deleteModelByNameAndUsername(selectedModel.getName(), context.getCurrentUser());
+                        modelList.remove(selectedModel);
+                    } else {
+                        System.out.println("Model deletion cancelled.");
+                    }
+                });
             }
         } else if (action.equals("sortModels")) {
-            // Handle sorting logic
             FXCollections.sort(modelList, Comparator.comparing(Model::getName));
             System.out.println("Models sorted");
         } else if (action.equals("newModel")) {
-            // Handle new model logic
             context.setState(new NewModelState(context));
         } else if (action.equals("updateModel")) {
-            // Handle model deletion logic
             Model selectedModel = modelListView.getSelectionModel().getSelectedItem();
             if (selectedModel != null) {
-                System.out.println("Deleting model: " + selectedModel);
-                databaseManager.deleteModelByName(selectedModel.getName()); //delete model from the database
-                modelList.remove(selectedModel); // Remove the selected model from the list
+                Alert confirmation = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmation.setTitle("Confirm Update");
+                confirmation.setHeaderText("Are you sure you want to update this model?");
+                confirmation.setContentText("Model: " + selectedModel.getName());
+
+                confirmation.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        System.out.println("Updating model: " + selectedModel);
+                        databaseManager.deleteModelByNameAndUsername(selectedModel.getName(), context.getCurrentUser());
+                        modelList.remove(selectedModel);
+                        context.setState(new NewModelState(context));
+                    } else {
+                        System.out.println("Model update cancelled.");
+                    }
+                });
             }
-            context.setState(new NewModelState(context));
-        }else if (action.equals("Logout")) {
-            // Handle logout logic
+        } else if (action.equals("Logout")) {
             System.out.println("Logging out...");
-            context.setState(new LoginState(context)); // Transition to login state
-        }   else if (action.equals("Main Menu")) {
-            // Handle logout logic
+            context.setState(new LoginState(context));
+        } else if (action.equals("Main Menu")) {
             System.out.println("Going to Main Menu...");
-            context.setState(new MainMenuState(context)); // Transition to main menu state
-        }else if (action.equals("Quit")) {
-            // Handle logout logic
-            System.out.println("Quiting Application...");
+            context.setState(new MainMenuState(context));
+        } else if (action.equals("Quit")) {
+            System.out.println("Quitting Application...");
             System.exit(0);
         }
     }

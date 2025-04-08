@@ -1,8 +1,6 @@
 package org.Skyline;
 
-import jakarta.persistence.*;
 import java.util.List;
-
 
 public class Model {
 
@@ -42,7 +40,6 @@ public class Model {
     public String toString() {return name;}
 
 
-
     public String showAttributes() {
         StringBuilder sb = new StringBuilder();
         sb.append("Model{")
@@ -59,7 +56,4 @@ public class Model {
         sb.append("]}");
         return sb.toString();
     }
-
-
-
 }

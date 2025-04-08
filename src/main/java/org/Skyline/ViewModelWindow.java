@@ -19,6 +19,7 @@ public class ViewModelWindow {
         Stage window = new Stage();
         window.initModality(Modality.APPLICATION_MODAL);
         window.setTitle("View Model - Parameter Settings");
+        window.setResizable(false);
 
         // Grid Layout
         GridPane layout = new GridPane();
@@ -57,6 +58,36 @@ public class ViewModelWindow {
         Label zThresholdLabel = new Label("Z Threshold:");
         TextField zThresholdField = new TextField(String.valueOf(stateContext.getzParameterThreshold()));
 
+        // Maximum/Minimum Radio Buttons for X Threshold
+        ToggleGroup xThresholdGroup = new ToggleGroup();
+        RadioButton xMaximum = new RadioButton("Maximum");
+        xMaximum.setToggleGroup(xThresholdGroup);
+        xMaximum.setSelected(stateContext.isXThresholdMaximum()); // Assume a method to get this value
+
+        RadioButton xMinimum = new RadioButton("Minimum");
+        xMinimum.setToggleGroup(xThresholdGroup);
+        xMinimum.setSelected(!stateContext.isXThresholdMaximum());
+
+        // Maximum/Minimum Radio Buttons for Y Threshold
+        ToggleGroup yThresholdGroup = new ToggleGroup();
+        RadioButton yMaximum = new RadioButton("Maximum");
+        yMaximum.setToggleGroup(yThresholdGroup);
+        yMaximum.setSelected(stateContext.isYThresholdMaximum());
+
+        RadioButton yMinimum = new RadioButton("Minimum");
+        yMinimum.setToggleGroup(yThresholdGroup);
+        yMinimum.setSelected(!stateContext.isYThresholdMaximum());
+
+        // Maximum/Minimum Radio Buttons for Z Threshold
+        ToggleGroup zThresholdGroup = new ToggleGroup();
+        RadioButton zMaximum = new RadioButton("Maximum");
+        zMaximum.setToggleGroup(zThresholdGroup);
+        zMaximum.setSelected(stateContext.isZThresholdMaximum());
+
+        RadioButton zMinimum = new RadioButton("Minimum");
+        zMinimum.setToggleGroup(zThresholdGroup);
+        zMinimum.setSelected(!stateContext.isZThresholdMaximum());
+
         // Apply Button
         Button applyButton = new Button("Apply");
         applyButton.setOnAction(event -> {
@@ -69,10 +100,15 @@ public class ViewModelWindow {
             stateContext.setYParameter(yComboBox.getValue());
             stateContext.setZParameter(zComboBox.getValue());
 
+            // Update Maximum/Minimum Threshold selections
+            stateContext.setXThresholdMaximum(xMaximum.isSelected());
+            stateContext.setYThresholdMaximum(yMaximum.isSelected());
+            stateContext.setZThresholdMaximum(zMaximum.isSelected());
+
             System.out.println("Updated Parameters:");
-            System.out.println("X: " + xComboBox.getValue() + ", Threshold: " + xThresholdField.getText());
-            System.out.println("Y: " + yComboBox.getValue() + ", Threshold: " + yThresholdField.getText());
-            System.out.println("Z: " + zComboBox.getValue() + ", Threshold: " + zThresholdField.getText());
+            System.out.println("X: " + xComboBox.getValue() + ", Threshold: " + xThresholdField.getText() + ", Maximum: " + xMaximum.isSelected());
+            System.out.println("Y: " + yComboBox.getValue() + ", Threshold: " + yThresholdField.getText() + ", Maximum: " + yMaximum.isSelected());
+            System.out.println("Z: " + zComboBox.getValue() + ", Threshold: " + zThresholdField.getText() + ", Maximum: " + zMaximum.isSelected());
 
             window.close();
         });
@@ -82,21 +118,27 @@ public class ViewModelWindow {
         layout.add(xComboBox, 1, 0);
         layout.add(xThresholdLabel, 0, 1);
         layout.add(xThresholdField, 1, 1);
+        layout.add(xMaximum, 1, 2);
+        layout.add(xMinimum, 1, 3);
 
-        layout.add(yLabel, 0, 2);
-        layout.add(yComboBox, 1, 2);
-        layout.add(yThresholdLabel, 0, 3);
-        layout.add(yThresholdField, 1, 3);
+        layout.add(yLabel, 0, 4);
+        layout.add(yComboBox, 1, 4);
+        layout.add(yThresholdLabel, 0, 5);
+        layout.add(yThresholdField, 1, 5);
+        layout.add(yMaximum, 1, 6);
+        layout.add(yMinimum, 1, 7);
 
-        layout.add(zLabel, 0, 4);
-        layout.add(zComboBox, 1, 4);
-        layout.add(zThresholdLabel, 0, 5);
-        layout.add(zThresholdField, 1, 5);
+        layout.add(zLabel, 0, 8);
+        layout.add(zComboBox, 1, 8);
+        layout.add(zThresholdLabel, 0, 9);
+        layout.add(zThresholdField, 1, 9);
+        layout.add(zMaximum, 1, 10);
+        layout.add(zMinimum, 1, 11);
 
-        layout.add(applyButton, 1, 6);
+        layout.add(applyButton, 1, 12);
 
         // Set Scene
-        Scene scene = new Scene(layout, 350, 250);
+        Scene scene = new Scene(layout, 350, 400);
         window.setScene(scene);
         window.showAndWait();
     }

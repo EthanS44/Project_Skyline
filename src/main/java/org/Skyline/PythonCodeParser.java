@@ -83,7 +83,6 @@ public class PythonCodeParser extends CodeParser {
                 attributes.setNumberOfFields(countFields(classCode));
                 attributes.setNumberOfMethods(countMethods(classCode));
                 attributes.setInheritanceDepth(calculateInheritanceDepth(classCode));
-
                 attributesList.add(attributes);
             }
             return attributesList;

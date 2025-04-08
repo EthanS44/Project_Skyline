@@ -1,9 +1,6 @@
 package org.Skyline;
 
-import javafx.stage.FileChooser;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -187,11 +187,12 @@ private Group root;
             buildingMaterial.setDiffuseColor(new Color(shade, shade, shade, 1.0));
             buildingMaterial.setSpecularColor(new Color(shade, shade, shade, 1.0));
 
-            // Apply the texture to the building
+            // Apply the texture to the building material
             buildingMaterial.setDiffuseMap(buildingTextureImage); // Set texture as diffuse map
 
             Box attributeBox = attributesToBuilding(attribute, xParameter, yParameter, zParameter);
 
+            // Normalize building sizes
             double normalizedWidth = MIN_BUILDING_X + ((getAttributeFromString(xParameter, attribute) - minX) * scaleX);
             double normalizedHeight = MIN_BUILDING_Y + ((getAttributeFromString(yParameter, attribute) - minY) * scaleY);
             double normalizedDepth = MIN_BUILDING_Z + ((getAttributeFromString(zParameter, attribute) - minZ) * scaleZ);
@@ -200,20 +201,55 @@ private Group root;
             attributeBox.setHeight(normalizedHeight);
             attributeBox.setDepth(normalizedDepth);
 
-            if (getAttributeFromString(xParameter, attribute) > context.getxParameterThreshold() ||
-                    getAttributeFromString(yParameter, attribute) > context.getyParameterThreshold() ||
-                    getAttributeFromString(zParameter, attribute) > context.getzParameterThreshold()) {
+            // flag building and turn red for threshold violation
+            boolean flagBuilding = false;
+            if (context.isXThresholdMaximum() && (getAttributeFromString(xParameter, attribute) > context.getxParameterThreshold())){
+                flagBuilding = true;
+            }
+            else if (!context.isXThresholdMaximum() && (getAttributeFromString(xParameter, attribute) < context.getxParameterThreshold())){
+                flagBuilding = true;
+            }
+            else if (context.isYThresholdMaximum() && (getAttributeFromString(yParameter, attribute) > context.getyParameterThreshold())){
+                flagBuilding = true;
+            }
+            else if (!context.isYThresholdMaximum() && (getAttributeFromString(yParameter, attribute) < context.getyParameterThreshold())){
+                flagBuilding = true;
+            }
+            else if (context.isZThresholdMaximum() && (getAttributeFromString(zParameter, attribute) > context.getzParameterThreshold())){
+                flagBuilding = true;
+            }
+            else if (!context.isZThresholdMaximum() && (getAttributeFromString(zParameter, attribute) < context.getzParameterThreshold())){
+                flagBuilding = true;
+            }
+
+            if (flagBuilding){
                 buildingMaterial.setDiffuseColor(Color.DARKRED);
                 buildingMaterial.setSpecularColor(Color.DARKRED);
             }
 
+            // apply building material to building
             attributeBox.setMaterial(buildingMaterial);
 
-            // Tooltip setup as previously
+            // check if thresholds are upper or lower limits for use in tooltip text
+            String xThreshold = "Maximum Threshold";
+            String yThreshold = "Maximum Threshold";
+            String zThreshold = "Maximum Threshold";
+
+            if (!context.isXThresholdMaximum()) {
+                xThreshold = "Minimum Threshold";
+            }
+            if (!context.isYThresholdMaximum()) {
+                yThreshold = "Minimum Threshold";
+            }
+            if (!context.isZThresholdMaximum()) {
+                zThreshold = "Minimum Threshold";
+            }
+
+            // Tooltip setup
             String tooltipText = attribute.getName() + "\n" +
-                    "X: " + xParameter + " = " + getAttributeFromString(xParameter, attribute) + " --> Threshold = " + context.getxParameterThreshold() + "\n" +
-                    "Y: " + yParameter + " = " + getAttributeFromString(yParameter, attribute) +" --> Threshold = " + context.getyParameterThreshold() + "\n" +
-                    "Z: " + zParameter + " = " + getAttributeFromString(zParameter, attribute) + " --> Threshold = " + context.getzParameterThreshold();
+                    "X: " + xParameter + " = " + getAttributeFromString(xParameter, attribute) + " --> " + xThreshold + " = " + context.getxParameterThreshold() + "\n" +
+                    "Y: " + yParameter + " = " + getAttributeFromString(yParameter, attribute) + " --> " + yThreshold + " = " + context.getyParameterThreshold() + "\n" +
+                    "Z: " + zParameter + " = " + getAttributeFromString(zParameter, attribute) + " --> " + zThreshold + " = " + context.getzParameterThreshold();
             Tooltip tooltip = new Tooltip(tooltipText);
             tooltip.setShowDelay(Duration.millis(1));
             Tooltip.install(attributeBox, tooltip);
@@ -327,8 +363,6 @@ private Group root;
         concreteMaterial.setSpecularColor(Color.rgb(50, 50, 50));
         concretePad.setMaterial(concreteMaterial);
         concretePad.setTranslateY(-1.5); // Slightly lower than the road
-        //concretePad.setTranslateX(road.getTranslateX()); // Align with the road
-        //concretePad.setTranslateZ(road.getTranslateZ()); // Align with the road
         root.getChildren().add(concretePad);
     }
 

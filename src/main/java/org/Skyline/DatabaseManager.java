@@ -2,11 +2,9 @@ package org.Skyline;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.stereotype.Controller;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Controller
 public class DatabaseManager {
@@ -177,18 +175,19 @@ public class DatabaseManager {
         }
     }
 
-    public void deleteModelByName(String modelName) {
-        String getModelIdSQL = "SELECT model_id FROM Models WHERE model_name = ?";
+    public void deleteModelByNameAndUsername(String modelName, String username) {
+        String getModelIdSQL = "SELECT model_id FROM Models WHERE model_name = ? AND username = ?";
         String deleteAttributesSQL = "DELETE FROM Attributes WHERE model_id = ?";
-        String deleteModelSQL = "DELETE FROM Models WHERE model_name = ?";
+        String deleteModelSQL = "DELETE FROM Models WHERE model_name = ? AND username = ?";
 
         try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
              PreparedStatement getModelIdStatement = connection.prepareStatement(getModelIdSQL);
              PreparedStatement deleteAttributesStatement = connection.prepareStatement(deleteAttributesSQL);
              PreparedStatement deleteModelStatement = connection.prepareStatement(deleteModelSQL)) {
 
-            // Get the model ID by name
+            // Get the model ID by name and username
             getModelIdStatement.setString(1, modelName);
+            getModelIdStatement.setString(2, username);
             ResultSet resultSet = getModelIdStatement.executeQuery();
 
             if (resultSet.next()) {
@@ -201,16 +200,94 @@ public class DatabaseManager {
 
             // Delete the model itself
             deleteModelStatement.setString(1, modelName);
+            deleteModelStatement.setString(2, username);
             int rowsDeleted = deleteModelStatement.executeUpdate();
 
             if (rowsDeleted > 0) {
                 System.out.println("Model and associated attributes deleted successfully!");
             } else {
-                System.out.println("No model found with the given name.");
+                System.out.println("No model found with the given name for this user.");
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public ArrayList<String> getAllUsernames() {
+        String query = "SELECT username FROM Users";
+        ArrayList<String> usernames = new ArrayList<>();
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                usernames.add(resultSet.getString("username"));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return usernames;
+    }
+
+    public void deleteUserByUsername(String username) {
+        String getModelIdsSQL = "SELECT model_id FROM Models WHERE username = ?";
+        String deleteAttributesSQL = "DELETE FROM Attributes WHERE model_id = ?";
+        String deleteModelsSQL = "DELETE FROM Models WHERE username = ?";
+        String deleteUserSQL = "DELETE FROM Users WHERE username = ?";
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement getModelIdsStatement = connection.prepareStatement(getModelIdsSQL);
+             PreparedStatement deleteAttributesStatement = connection.prepareStatement(deleteAttributesSQL);
+             PreparedStatement deleteModelsStatement = connection.prepareStatement(deleteModelsSQL);
+             PreparedStatement deleteUserStatement = connection.prepareStatement(deleteUserSQL)) {
+
+            // Get all model IDs for the user
+            getModelIdsStatement.setString(1, username);
+            ResultSet resultSet = getModelIdsStatement.executeQuery();
+
+            while (resultSet.next()) {
+                long modelId = resultSet.getLong("model_id");
+
+                // Delete attributes associated with each model
+                deleteAttributesStatement.setLong(1, modelId);
+                deleteAttributesStatement.executeUpdate();
+            }
+
+            // Delete all models for the user
+            deleteModelsStatement.setString(1, username);
+            deleteModelsStatement.executeUpdate();
+
+            // Delete the user
+            deleteUserStatement.setString(1, username);
+            int rowsDeleted = deleteUserStatement.executeUpdate();
+
+            if (rowsDeleted > 0) {
+                System.out.println("User and all associated models and attributes deleted successfully!");
+            } else {
+                System.out.println("No user found with that username.");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateUserPassword(String username, String newPassword) {
+        String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            String sql = "UPDATE Users SET Password = ? WHERE Username = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setString(1, hashedPassword);
+            stmt.setString(2, username);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 }

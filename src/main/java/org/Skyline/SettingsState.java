@@ -8,64 +8,133 @@ import javafx.stage.Stage;
 public class SettingsState implements State {
     private StateContext context;
     private Stage stage;
-    private boolean isDarkMode;
-
-    // Add other settings fields if needed, like color schemes, building parameters, etc.
-    private ComboBox<String> colorSchemeComboBox;
+    private String username;
+    private DatabaseManager db = new DatabaseManager();
 
     public SettingsState(StateContext context) {
         this.context = context;
+        this.username = context.getCurrentUser();
         this.stage = new Stage(); // Settings screen will be in a new window
-        this.isDarkMode = false; // Default to light mode
     }
 
     @Override
     public void showUI() {
         // Create MenuBar
         MenuBar menuBar = new MenuBar();
-
-        // Create the File menu with a Logout option
         Menu fileMenu = new Menu("Options");
+
         MenuItem logoutMenuItem = new MenuItem("Logout");
-
-        // Add main menu option
         MenuItem mainMenuItem = new MenuItem("Main Menu");
-
-        // Add main menu option
         MenuItem quitMenuItem = new MenuItem("Quit");
 
-        // Add the logout action to the menu items
         logoutMenuItem.setOnAction(event -> handleAction("Logout"));
         mainMenuItem.setOnAction(event -> handleAction("Main Menu"));
         quitMenuItem.setOnAction(event -> handleAction("Quit"));
 
-        fileMenu.getItems().add(logoutMenuItem);
-        fileMenu.getItems().add(mainMenuItem);
-        fileMenu.getItems().add(quitMenuItem);
+        fileMenu.getItems().addAll(logoutMenuItem, mainMenuItem, quitMenuItem);
         menuBar.getMenus().add(fileMenu);
 
-        // Create settings UI
+        // Create layout
         VBox settingsLayout = new VBox(10);
         settingsLayout.setPadding(new javafx.geometry.Insets(10));
+        settingsLayout.getChildren().add(menuBar);
 
-        // Dark Mode Toggle
-        CheckBox darkModeCheckBox = new CheckBox("Enable Dark Mode");
-        darkModeCheckBox.setSelected(isDarkMode);
-        darkModeCheckBox.setOnAction(event -> toggleDarkMode(darkModeCheckBox.isSelected()));
+        if (username.equals("admin")) {
+            // ------------------ ADMIN PANEL ------------------
+            Label adminLabel = new Label("Admin Panel:");
 
-        // Color Scheme ComboBox (example setting)
-        Label colorSchemeLabel = new Label("Select Color Scheme:");
-        colorSchemeComboBox = new ComboBox<>();
-        colorSchemeComboBox.getItems().addAll("Light", "Dark", "Blue", "Green");
-        colorSchemeComboBox.getSelectionModel().select(isDarkMode ? "Dark" : "Light"); // Default selection
+            // --- User Creation Section ---
+            TextField newUserField = new TextField();
+            newUserField.setPromptText("Enter new username");
 
-        // Apply Button to save settings and go back to Main Menu
-        javafx.scene.control.Button applyButton = new javafx.scene.control.Button("Apply");
-        applyButton.setOnAction(event -> applySettings());
+            PasswordField newPasswordField = new PasswordField();
+            newPasswordField.setPromptText("Enter password");
 
-        settingsLayout.getChildren().addAll(darkModeCheckBox, colorSchemeLabel, colorSchemeComboBox, applyButton);
+            Button createUserButton = new Button("Create User");
+            createUserButton.setOnAction(e -> {
+                String newUser = newUserField.getText();
+                String newPass = newPasswordField.getText();
 
-        Scene settingsScene = new Scene(settingsLayout, 300, 200);
+                if (!newUser.isEmpty() && !newPass.isEmpty()) {
+                    if (!db.doesUserExist(newUser)) {
+                        String hashed = org.mindrot.jbcrypt.BCrypt.hashpw(newPass, org.mindrot.jbcrypt.BCrypt.gensalt());
+                        DatabaseManager.saveUser(newUser, hashed);
+                        showAlert("Success", "User created.");
+                        newUserField.clear();
+                        newPasswordField.clear();
+                    } else {
+                        showAlert("Error", "User already exists.");
+                    }
+                } else {
+                    showAlert("Error", "Username and password cannot be empty.");
+                }
+            });
+
+            // --- User Deletion Section ---
+            ComboBox<String> userDropdown = new ComboBox<>();
+            userDropdown.getItems().addAll(db.getAllUsernames());
+            userDropdown.setPromptText("Select user to delete");
+
+            Button deleteUserButton = new Button("Delete User");
+            deleteUserButton.setOnAction(e -> {
+                String userToDelete = userDropdown.getValue();
+                if (userToDelete != null && !userToDelete.equals("admin")) {
+                    db.deleteUserByUsername(userToDelete);
+                    userDropdown.getItems().setAll(db.getAllUsernames()); // Refresh
+                    showAlert("Deleted", "User '" + userToDelete + "' deleted.");
+                } else {
+                    showAlert("Error", "Cannot delete admin or no user selected.");
+                }
+            });
+
+            settingsLayout.getChildren().addAll(
+                    adminLabel,
+                    new Label("Create User:"),
+                    newUserField, newPasswordField, createUserButton,
+                    new Separator(),
+                    new Label("Delete User:"),
+                    userDropdown, deleteUserButton
+            );
+
+        } else {
+            // ------------------ REGULAR USER PANEL ------------------
+            Label changePassLabel = new Label("Change Your Password");
+
+            PasswordField newPasswordField = new PasswordField();
+            newPasswordField.setPromptText("New Password");
+
+            PasswordField confirmPasswordField = new PasswordField();
+            confirmPasswordField.setPromptText("Confirm New Password");
+
+            Button updatePasswordBtn = new Button("Update Password");
+            Label feedbackLabel = new Label();
+
+            updatePasswordBtn.setOnAction(e -> {
+                String newPass = newPasswordField.getText();
+                String confirmPass = confirmPasswordField.getText();
+
+                if (newPass.isEmpty() || confirmPass.isEmpty()) {
+                    feedbackLabel.setText("Please fill in both fields.");
+                } else if (!newPass.equals(confirmPass)) {
+                    feedbackLabel.setText("Passwords do not match.");
+                } else {
+                    db.updateUserPassword(username, newPass);
+                    feedbackLabel.setText("Password updated successfully.");
+                    newPasswordField.clear();
+                    confirmPasswordField.clear();
+                }
+            });
+
+            settingsLayout.getChildren().addAll(
+                    changePassLabel,
+                    newPasswordField,
+                    confirmPasswordField,
+                    updatePasswordBtn,
+                    feedbackLabel
+            );
+        }
+
+        Scene settingsScene = new Scene(settingsLayout, 350, 400);
         stage.setTitle("Settings");
         stage.setScene(settingsScene);
         stage.show();
@@ -73,43 +142,23 @@ public class SettingsState implements State {
 
     @Override
     public void handleAction(String action) {
-        // Example: Handle other possible actions, like saving settings
-        if (action.equals("applySettings")) {
-            applySettings();
-        }else if (action.equals("Logout")) {
-            // Handle logout logic
+        if (action.equals("Logout")) {
             System.out.println("Logging out...");
-            context.setState(new LoginState(context)); // Transition to login state
-        }   else if (action.equals("Main Menu")) {
-            // Handle logout logic
+            context.setState(new LoginState(context));
+        } else if (action.equals("Main Menu")) {
             System.out.println("Going to Main Menu...");
-            context.setState(new MainMenuState(context)); // Transition to main menu state
-        }else if (action.equals("Quit")) {
-            // Handle logout logic
-            System.out.println("Quiting Application...");
+            context.setState(new MainMenuState(context));
+        } else if (action.equals("Quit")) {
+            System.out.println("Quitting Application...");
             System.exit(0);
         }
     }
 
-    private void toggleDarkMode(boolean enable) {
-        this.isDarkMode = enable;
-        // Change the UI appearance based on dark mode toggle
-        if (enable) {
-            System.out.println("Dark Mode Enabled");
-        } else {
-            System.out.println("Light Mode Enabled");
-        }
-    }
-
-    private void applySettings() {
-        // Apply selected settings
-        String selectedColorScheme = colorSchemeComboBox.getSelectionModel().getSelectedItem();
-        System.out.println("Applying color scheme: " + selectedColorScheme);
-
-        // You can add logic here to apply the selected settings to the rest of the app
-        // Example: Update the global theme or color scheme
-
-        // Transition back to the Main Menu
-        context.setState(new MainMenuState(context));
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

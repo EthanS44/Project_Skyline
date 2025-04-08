@@ -1,10 +1,7 @@
 package org.Skyline;
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Properties;
 
 public class PasswordManagement {
     private static DatabaseManager databaseManager = new DatabaseManager();

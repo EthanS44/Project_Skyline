@@ -1,14 +1,8 @@
 package org.Skyline;
 
-import javafx.beans.InvalidationListener;
-import javafx.collections.ListChangeListener;
 import javafx.stage.Stage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import javafx.collections.ObservableList;
 
-import java.util.*;
-
+import java.util.ArrayList;
 
 public class StateContext {
     private State currentState;
@@ -24,12 +18,15 @@ public class StateContext {
     private int yParameterThreshold = 500;
     private int zParameterThreshold = 500;
 
+    // Added to track if threshold is a maximum or minimum
+    private boolean xThresholdMaximum = true;  // Default: upper limit
+    private boolean yThresholdMaximum = true;  // Default: upper limit
+    private boolean zThresholdMaximum = true;  // Default: upper limit
 
-    public StateContext(Stage primaryStage){
+    public StateContext(Stage primaryStage) {
         this.primaryStage = primaryStage;
         this.modelList = new ArrayList<Model>();
         this.databaseManager = new DatabaseManager();
-
     }
 
     public Stage getPrimaryStage() {
@@ -45,11 +42,11 @@ public class StateContext {
         this.currentUser = username;
     }
 
-    public String getCurrentUser(){
+    public String getCurrentUser() {
         return currentUser;
     }
 
-    public void setSelectedModel(Model selectedModel){
+    public void setSelectedModel(Model selectedModel) {
         this.selectedModel = selectedModel;
     }
 
@@ -81,13 +78,40 @@ public class StateContext {
         this.zParameterThreshold = zParameterThreshold;
     }
 
-    public ArrayList<Model> getModelList(){
+    // Getter and Setter for Upper/Lower limit tracking
+    public boolean isXThresholdMaximum() {
+        return xThresholdMaximum;
+    }
+
+    public void setXThresholdMaximum(boolean xThresholdUpperLimit) {
+        this.xThresholdMaximum = xThresholdUpperLimit;
+    }
+
+    public boolean isYThresholdMaximum() {
+        return yThresholdMaximum;
+    }
+
+    public void setYThresholdMaximum(boolean yThresholdUpperLimit) {
+        this.yThresholdMaximum = yThresholdUpperLimit;
+    }
+
+    public boolean isZThresholdMaximum() {
+        return zThresholdMaximum;
+    }
+
+    public void setZThresholdMaximum(boolean zThresholdUpperLimit) {
+        this.zThresholdMaximum = zThresholdUpperLimit;
+    }
+
+    public ArrayList<Model> getModelList() {
         return modelList;
     }
 
-    public void setModelList(ArrayList<Model> modelList) {this.modelList = modelList;}
+    public void setModelList(ArrayList<Model> modelList) {
+        this.modelList = modelList;
+    }
 
-    public Model getSelectedModel(){
+    public Model getSelectedModel() {
         return selectedModel;
     }
 

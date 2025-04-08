@@ -114,24 +114,6 @@ public class JavaCodeParser extends CodeParser {
         return cu.getPackageDeclaration().map(pkg -> pkg.getNameAsString()).orElse("No package");
     }
 
-    public double calculateClassCohesion(String code) {
-        JavaParser parser = new JavaParser();
-        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
-        List<FieldDeclaration> fields = cu.findAll(FieldDeclaration.class);
-        List<MethodDeclaration> methods = cu.findAll(MethodDeclaration.class);
-        int methodUsingFields = 0;
-        for (MethodDeclaration method : methods) {
-            for (FieldDeclaration field : fields) {
-                if (method.findAll(com.github.javaparser.ast.expr.FieldAccessExpr.class).stream()
-                        .anyMatch(expr -> expr.getNameAsString().equals(field.getVariables().get(0).getNameAsString()))) {
-                    methodUsingFields++;
-                    break;
-                }
-            }
-        }
-        return methods.isEmpty() ? 0 : (double) methodUsingFields / methods.size();
-    }
-
     @Override
     public String findClassName(String code) {
         JavaParser parser = new JavaParser();
@@ -143,7 +125,6 @@ public class JavaCodeParser extends CodeParser {
     @Override
     public List<Attributes> generateModelAttributesList(String code) {return null;}
 
-    // Must find associations still
 
     // Method to take class and spit out ModelAttributes
     @Override
@@ -170,10 +151,6 @@ public class JavaCodeParser extends CodeParser {
             attributes.setClassPackage(identifyPackage(code));
 
             attributes.setAverageLinesPerMethod(calculateAverageLinesPerMethod(code));
-
-            //attributes.setNumberOfAssociations(calculateNumberOfAssociations(code));
-
-            //attributes.setNumberOfImports(calculateNumberOfImports(code));
 
             return attributes;
         }
