@@ -118,7 +118,15 @@ public class ModelListState implements State {
             FXCollections.sort(modelList, Comparator.comparing(Model::getName));
             System.out.println("Models sorted");
         } else if (action.equals("newModel")) {
-            context.setState(new NewModelState(context));
+            if (modelList.size() >= 10) {
+                Alert alert = new Alert(Alert.AlertType.WARNING);
+                alert.setTitle("Model Limit Reached");
+                alert.setHeaderText("You have reached the maximum number of models allowed.");
+                alert.setContentText("Please delete an existing model before creating a new one.");
+                alert.showAndWait();
+            } else {
+                context.setState(new NewModelState(context));
+            }
         } else if (action.equals("updateModel")) {
             Model selectedModel = modelListView.getSelectionModel().getSelectedItem();
             if (selectedModel != null) {

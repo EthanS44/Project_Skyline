@@ -42,12 +42,15 @@ private double startX;
 private double startY;
 private final double rotationSpeed = 0.2;
 
+// default camera position
 private final int cameraDistance = 10000;
 
+// width of the road
 private final double roadWidth = 300;
 
 private final int MULTIPLIER = 10;
 
+// number of randomly placed trees
 private final int TREE_NUMBER = 4000;
 
 private Stage primaryStage;
@@ -137,7 +140,6 @@ private Group root;
 
         scene.setOnScroll(event -> handleScrollGroupMovement(event, camera));
 
-
         scene.setOnMousePressed(event -> {
             startX = event.getSceneX();
             startY = event.getSceneY();
@@ -148,6 +150,7 @@ private Group root;
 
 
     private List<Box> createBuildings() {
+        // Returns the list of buildings that must be placed. Each of them is properly sized.
         Model model = context.getSelectedModel();
         String xParameter = context.getxParameter();
         String yParameter = context.getyParameter();
@@ -260,6 +263,7 @@ private Group root;
     }
 
     private int placeBuildings(List<Box> buildings) {
+        // Places the buildings into the scene and returns the position of the furthest building from the origin
         int currentXPixelNegative = 0;
         int currentZPixelNegative = 0;
         int currentZPixelPositive = 0;
@@ -345,7 +349,6 @@ private Group root;
         road2.setMaterial(road2Material);
         road2.setScaleX(1);
         road2.setScaleY(1);
-        //road2.setScaleZ(10);
 
         // Position road on top of the concrete pad
         road.setTranslateY(-3);
@@ -355,6 +358,7 @@ private Group root;
     }
 
     private void slabSetup(int slabSize){
+        // Sets up the concrete foundation underneath the buildings
         Box concretePad = new Box(slabSize*2 + 200, 0, slabSize*2 + 200); // diagonal is same length as building range
         Image concreteTextureImage = new Image("concrete_texture.jpeg");
         PhongMaterial concreteMaterial = new PhongMaterial();
@@ -367,10 +371,10 @@ private Group root;
     }
 
     private void treeSetup(int numberOfTrees, int cityBound){
+        // Creates and places all the trees
         Group treeGroup = new Group();
         Random random = new Random();
 
-        // Tree setup
         for (int i = 0; i < numberOfTrees; i++) {
             double x;
             double z;
@@ -402,6 +406,7 @@ private Group root;
     }
 
     private void handleGroupMovement(KeyEvent event, Group group, PerspectiveCamera camera) {
+        // Handles movement when a key is pressed
         double currentZ = camera.getTranslateZ();
         double currentY = camera.getTranslateY();
 
@@ -450,6 +455,7 @@ private Group root;
     }
 
     private void handleScrollGroupMovement(ScrollEvent event, PerspectiveCamera camera) {
+        // Handles movement with the scroll wheel
         double currentZ = camera.getTranslateZ();
         double currentY = camera.getTranslateY();
 
@@ -469,6 +475,7 @@ private Group root;
     }
 
     private void handleDragGroupMovement(MouseEvent event, Group root) {
+        // Handles movement when mouse is clicked and dragged
         double deltaX = event.getSceneX() - startX;
         double deltaY = event.getSceneY() - startY;
 
@@ -493,6 +500,7 @@ private Group root;
 
 
     private Box attributesToBuilding(Attributes attributes, String xParameter, String yParameter, String zParameter){
+        // Takes an attributes object and returns a building
         Box newBox = new Box();
 
         newBox.setWidth(getAttributeFromString(xParameter, attributes) * MULTIPLIER);
@@ -503,6 +511,7 @@ private Group root;
     }
 
     private int getAttributeFromString(String attribute, Attributes attributes){
+        // Takes an parameter and Attributes object and returns the value of that parameter
         switch (attribute) {
             case "LINES OF CODE":
                 return attributes.getLinesOfCode();
