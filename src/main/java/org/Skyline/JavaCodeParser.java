@@ -41,13 +41,14 @@ public class JavaCodeParser extends CodeParser {
     }
 
     @Override
-    public int countLinesOfCode(String code) {
+    public int countLinesOfCodeNoBlanks(String code) {
         return (int) code.lines()
                 .filter(line -> !line.trim().isEmpty() && !line.trim().startsWith("//"))
                 .count();
     }
 
-    public int countLinesIncludingComments(String code) {
+    @Override
+    public int countLinesOfCode(String code) {
         return (int) code.lines().count();
     }
 
@@ -87,26 +88,6 @@ public class JavaCodeParser extends CodeParser {
         return (double) totalLines / methods.size();
     }
 
-    @Override
-    public int calculateInheritanceDepth(String code) {
-        JavaParser parser = new JavaParser();
-        CompilationUnit cu = parser.parse(code).getResult().orElseThrow();
-        ClassOrInterfaceDeclaration classDecl = cu.findFirst(ClassOrInterfaceDeclaration.class).orElseThrow();
-        int depth = 0;
-        while (!classDecl.getExtendedTypes().isEmpty()) {
-            depth++;
-            String superClassName = classDecl.getExtendedTypes().get(0).getNameAsString();
-            classDecl = cu.findAll(ClassOrInterfaceDeclaration.class).stream()
-                    .filter(c -> c.getNameAsString().equals(superClassName))
-                    .findFirst()
-                    .orElse(null);
-            if (classDecl == null) {
-                break;
-            }
-        }
-        return depth;
-    }
-
 
     public String identifyPackage(String code) {
         JavaParser parser = new JavaParser();
@@ -122,40 +103,24 @@ public class JavaCodeParser extends CodeParser {
         return classDecl.getNameAsString();
     }
 
-    @Override
-    public List<Attributes> generateModelAttributesList(String code) {return null;}
 
-
-    // Method to take class and spit out ModelAttributes
+    // Method to take class and return ModelAttributes
     @Override
     public Attributes generateModelAttributes(String code){
         if (isValidClass(code)){
 
             Attributes attributes = new Attributes();
-
             attributes.setName(findClassName(code));
             System.out.println(attributes.getName());
-
-            attributes.setLinesOfCode(countLinesIncludingComments(code));
-
-            attributes.setLinesOfCodeNoBlanks(countLinesOfCode(code));
-
+            attributes.setLinesOfCode(countLinesOfCode(code));
+            attributes.setLinesOfCodeNoBlanks(countLinesOfCodeNoBlanks(code));
             attributes.setNumberOfFields(countFields(code));
-
             attributes.setNumberOfMethods(countMethods(code));
-
             attributes.setMaxCyclomaticComplexity(calculateMaximumCyclomaticComplexity(code));
-
-            attributes.setInheritanceDepth(calculateInheritanceDepth(code));
-
             attributes.setClassPackage(identifyPackage(code));
-
             attributes.setAverageLinesPerMethod(calculateAverageLinesPerMethod(code));
-
             return attributes;
         }
-
         throw new IllegalArgumentException("Not a valid class!");
     }
-
 }

@@ -9,6 +9,7 @@ public class SettingsState implements State {
     private StateContext context;
     private Stage stage;
     private String username;
+
     private DatabaseManager db = new DatabaseManager();
 
     public SettingsState(StateContext context) {
@@ -58,7 +59,7 @@ public class SettingsState implements State {
                 if (!newUser.isEmpty() && !newPass.isEmpty()) {
                     if (!db.doesUserExist(newUser)) {
                         String hashed = org.mindrot.jbcrypt.BCrypt.hashpw(newPass, org.mindrot.jbcrypt.BCrypt.gensalt());
-                        DatabaseManager.saveUser(newUser, hashed);
+                        db.saveUser(newUser, hashed);
                         showAlert("Success", "User created.");
                         newUserField.clear();
                         newPasswordField.clear();

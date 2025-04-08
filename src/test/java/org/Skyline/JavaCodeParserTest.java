@@ -1,60 +1,122 @@
 package org.Skyline;
 
+import static org.junit.Assert.*;
+import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.nio.file.Files;
+import java.util.List;
 
 public class JavaCodeParserTest {
 
-    @Test
-    public void isValidClass() {
+    private JavaCodeParser parser;
+
+    @Before
+    public void setUp() {
+        parser = new JavaCodeParser();
     }
 
     @Test
-    public void countFields() {
+    public void testGenerateModelAttributes_SimpleClass() throws Exception {
+        File temp = File.createTempFile("TestClass", ".java");
+        try (FileWriter writer = new FileWriter(temp)) {
+            writer.write("package com.example;\n" +
+                    "public class TestClass {\n" +
+                    "    private int x;\n" +
+                    "    public void methodA() {}\n" +
+                    "}\n");
+        }
+
+        String code = new String(Files.readAllBytes(temp.toPath()));
+        Attributes attr = parser.generateModelAttributes(code);
+
+        assertEquals("TestClass", attr.getName());
+        assertEquals("com.example", attr.getClassPackage());
+        assertEquals(1, attr.getNumberOfMethods());
+        assertEquals(1, attr.getNumberOfFields());
+        assertTrue(attr.getLinesOfCode() >= 3);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGenerateModelAttributes_InvalidClass() {
+        String code = "NotAClass {}";
+        parser.generateModelAttributes(code);
     }
 
     @Test
-    public void countMethods() {
+    public void testIdentifyPackage() {
+        String code = "package com.example; public class A {}";
+        String result = parser.identifyPackage(code);
+        assertEquals("com.example", result);
     }
 
     @Test
-    public void countLinesOfCode() {
+    public void testFindClassName() {
+        String code = "public class HelloWorld {}";
+        String className = parser.findClassName(code);
+        assertEquals("HelloWorld", className);
     }
 
     @Test
-    public void countLinesIncludingComments() {
+    public void testIsValidClass_True() {
+        String code = "public class ValidClass {}";
+        assertTrue(parser.isValidClass(code));
     }
 
     @Test
-    public void calculateMaximumCyclomaticComplexity() {
+    public void testIsValidClass_False() {
+        String code = "InterfaceExample {}";
+        assertFalse(parser.isValidClass(code));
     }
 
     @Test
-    public void calculateAverageLinesPerMethod() {
+    public void testCountLinesOfCode() {
+        String code = "public class X {\nint a;\nvoid m() {}\n}";
+        assertEquals(4, parser.countLinesOfCode(code));
     }
 
     @Test
-    public void calculateInheritanceDepth() {
+    public void testCountLinesOfCodeNoBlanks() {
+        String code = "\n\npublic class X {\n\nint a;\n\n}\n";
+        assertEquals(3, parser.countLinesOfCodeNoBlanks(code));
     }
 
     @Test
-    public void identifyPackage() {
+    public void testCountFields() {
+        String code = "public class X { int a; String name; }";
+        assertEquals(2, parser.countFields(code));
     }
 
     @Test
-    public void calculateClassCohesion() {
+    public void testCountMethods() {
+        String code = "public class X { void a() {} int b() { return 1; } }";
+        assertEquals(2, parser.countMethods(code));
     }
 
     @Test
-    public void findClassName() {
+    public void testCalculateAverageLinesPerMethod() {
+        String code = "public class A { \nvoid m1() { \nint x = 1; \nint z = 4;} \nvoid m2() { \nint y = 2; } }";
+        double avg = parser.calculateAverageLinesPerMethod(code);
+        assertEquals(2.5, avg, 0.001);
     }
 
     @Test
-    public void generateModelAttributesList() {
+    public void testCalculateCyclomaticComplexityForMethod_Branches() {
+        String method = "public void test() { if (true) {} else if (false) {} for(int i=0;i<10;i++) {} while(true) {} switch(x) { case 1: break; case 2: break; } try { } catch(Exception e) {} }";
+        int complexity = parser.calculateMaximumCyclomaticComplexity(method);
+        assertEquals(7, complexity); // if, else-if, for, while, switch-case(2), catch
     }
 
     @Test
-    public void generateModelAttributes() {
+    public void testCalculateMaximumCyclomaticComplexity_MultipleMethods() {
+        String code = "public class A {\n" +
+                "void m1() { if (a) {} }\n" +
+                "void m2() { while (b) {} for(int i=0;i<10;i++) {} }\n" +
+                "void m3() { try {} catch(Exception e) {} switch(x) { case 1: break; case 2: break; } }\n" +
+                "}";
+        int max = parser.calculateMaximumCyclomaticComplexity(code);
+        assertTrue(max >= 5); // highest among m2 or m3 depending on parser logic
     }
-}
+} 

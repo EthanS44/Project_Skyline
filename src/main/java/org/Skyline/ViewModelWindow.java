@@ -33,8 +33,7 @@ public class ViewModelWindow {
                 "LINES OF CODE NO BLANKS",
                 "NUMBER OF METHODS",
                 "AVERAGE LINES PER METHOD",
-                "CYCLOMATIC COMPLEXITY",
-                "INHERITANCE DEPTH"};
+                "CYCLOMATIC COMPLEXITY"};
 
         // X Parameter Dropdown
         Label xLabel = new Label("X Parameter:");

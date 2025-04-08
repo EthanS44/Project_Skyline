@@ -20,7 +20,7 @@ class PythonPackageParser extends PackageParser {
             }
 
             System.out.println("Scanning directory: " + directory.getAbsolutePath());
-            List<File> pythonFiles = getFiles(directory, ".py");
+            List<File> pythonFiles = getFiles2(directory, ".py");
 
             if (pythonFiles.isEmpty()) {
                 System.out.println("No Python files found.");
@@ -49,5 +49,27 @@ class PythonPackageParser extends PackageParser {
         Model newModel = new Model(directory.getName(), user, attributesList);
         System.out.println(newModel.showAttributes());
         return newModel;
+    }
+
+    // Helper method to recursively get .py files, skipping .venv directories
+    private List<File> getFiles2(File directory, String extension) {
+        List<File> fileList = new ArrayList<>();
+
+        File[] files = directory.listFiles();
+        if (files == null) return fileList;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                if (file.getName().equals(".venv")) {
+                    System.out.println("Skipping .venv directory: " + file.getAbsolutePath());
+                    continue;
+                }
+                fileList.addAll(getFiles(file, extension));
+            } else if (file.getName().endsWith(extension)) {
+                fileList.add(file);
+            }
+        }
+
+        return fileList;
     }
 }
