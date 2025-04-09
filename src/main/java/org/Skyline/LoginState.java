@@ -15,8 +15,7 @@ public class LoginState implements State {
     private String username;
     private String password;
     private Label errorLabel = new Label("Error");
-    private DatabaseManager databaseManager = new DatabaseManager();
-    private PasswordManagement PasswordManagement = new PasswordManagement(databaseManager);
+    private PasswordManagement PasswordManagement = new PasswordManagement();
 
     public LoginState(StateContext context) {
         this.context = context;
@@ -28,6 +27,9 @@ public class LoginState implements State {
     }
     public void setPassword(String password) {
         this.password = password;
+    }
+    public void setPasswordManagement(PasswordManagement PasswordManagement) {
+        this.PasswordManagement = PasswordManagement;
     }
 
     @Override

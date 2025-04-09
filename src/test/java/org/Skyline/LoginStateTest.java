@@ -1,5 +1,6 @@
 package org.Skyline;
 
+import javafx.embed.swing.JFXPanel;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -9,29 +10,31 @@ import static org.mockito.Mockito.*;
 public class LoginStateTest {
 
     private StateContext mockContext;
+    private PasswordManagement mockPasswordManagement;
     private LoginState loginState;
-    private DatabaseManager databaseManager = new DatabaseManager();
-    private PasswordManagement PasswordManagement = new PasswordManagement(databaseManager);
 
     @BeforeClass
     public static void initJavaFX() {
-        // This initializes the JavaFX toolkit
-        new javafx.embed.swing.JFXPanel();
+        new JFXPanel(); // Initializes JavaFX environment
     }
 
     @Before
     public void setUp() {
         mockContext = mock(StateContext.class);
-        loginState = new LoginState(mockContext);
+        mockPasswordManagement = mock(PasswordManagement.class);
+
+        // Inject mock PasswordManagement
+        loginState = new LoginState(mockContext) {
+            {
+                this.setPasswordManagement(mockPasswordManagement);
+            }
+        };
     }
 
     @Test
     public void testHandleLoginSuccess() throws Exception {
-        // Mock PasswordManagement behavior
-        mockStatic(PasswordManagement.class);
-        when(PasswordManagement.verifyUser("testuser", "testpass")).thenReturn(true);
+        when(mockPasswordManagement.verifyUser("testuser", "testpass")).thenReturn(true);
 
-        // Set username/password manually
         loginState.setUsername("testuser");
         loginState.setPassword("testpass");
 
@@ -43,31 +46,27 @@ public class LoginStateTest {
 
     @Test
     public void testHandleLoginFailure() throws Exception {
-        when(PasswordManagement.verifyUser("baduser", "wrongpass")).thenReturn(false);
+        when(mockPasswordManagement.verifyUser("baduser", "wrongpass")).thenReturn(false);
 
         loginState.setUsername("baduser");
         loginState.setPassword("wrongpass");
 
         loginState.handleAction("login");
 
-        // No state transition should happen
         verify(mockContext, never()).setUser(anyString());
         verify(mockContext, never()).setState(any());
-
     }
 
     @Test
     public void testHandleRegisterSuccess() throws Exception {
-
-        // Register will succeed
-        doNothing().when(PasswordManagement.class);
-        PasswordManagement.registerUser("newuser", "newpass");
+        doNothing().when(mockPasswordManagement).registerUser("newuser", "newpass");
 
         loginState.setUsername("newuser");
         loginState.setPassword("newpass");
 
         loginState.handleAction("register");
 
+        verify(mockPasswordManagement).registerUser("newuser", "newpass");
         verify(mockContext).setUser("newuser");
         verify(mockContext).setState(any(MainMenuState.class));
     }

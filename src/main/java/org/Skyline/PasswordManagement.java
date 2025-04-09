@@ -4,7 +4,10 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.io.IOException;
 
 public class PasswordManagement {
-    private final DatabaseManager databaseManager;
+    private DatabaseManager databaseManager = new DatabaseManager();
+
+    public PasswordManagement() {
+    }
 
     public PasswordManagement(DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
