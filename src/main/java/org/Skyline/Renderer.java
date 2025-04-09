@@ -1,6 +1,5 @@
 package org.Skyline;
 
-import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
@@ -21,7 +20,7 @@ import java.util.List;
 import java.util.Random;
 
 
-public class Renderer extends Application {
+public class Renderer {
 
 private final double rotationAmount = 1;
 private final double moveAmount = 200;
@@ -62,7 +61,7 @@ private Group root;
         this.context = context;
     }
 
-    @Override
+
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         setUp();
