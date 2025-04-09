@@ -21,11 +21,6 @@ public class ModelViewState implements State {
 
     @Override
     public void handleAction(String action) {
-        if (action.equals("rotateModel")) {
-            System.out.println("Rotating Model...");
-        } else if (action.equals("panModel")) {
-            System.out.println("Panning Model...");
-        }
     }
 }
 

@@ -30,4 +30,9 @@ public class PasswordManagement {
     public static boolean verifyUser(String user, String password) throws IOException {
         return databaseManager.verifyCredentials(user, password);
     }
+
+    //method for testing purposes
+    public void setDatabaseManager(DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
+    }
 }

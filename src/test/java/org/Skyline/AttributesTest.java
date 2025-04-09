@@ -11,7 +11,7 @@ public class AttributesTest {
     @Before
     public void setUp() throws Exception {
         // Set up a new Attributes instance before each test
-        attributes = new Attributes("testUser");
+        attributes = new Attributes("testUser", 100, 90, 10, 3, 30, 1, 0, 2);
     }
 
     @Test

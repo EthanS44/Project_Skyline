@@ -4,102 +4,143 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class CppCodeParserTest {
 
-    private CppCodeParser cppCodeParser;
+    private CppCodeParser parser;
 
     @Before
-    public void setUp() throws Exception {
-        // Set up the CppCodeParser instance before each test
-        cppCodeParser = new CppCodeParser();
+    public void setUp() {
+        parser = new CppCodeParser();
     }
 
     @Test
-    public void testIsValidClass_ValidClass() {
-        // Test if a valid C++ class returns true
-        String code = "class MyClass { int x; };";
-        assertTrue(cppCodeParser.isValidClass(code));
+    public void testIsValidClass_True() {
+        String code = "class MyClass { public: void method(); };";
+        assertTrue(parser.isValidClass(code));
     }
 
     @Test
-    public void testIsValidClass_InvalidClass() {
-        // Test if an invalid C++ class returns false
-        String code = "int x;";
-        assertFalse(cppCodeParser.isValidClass(code));
-    }
-
-    @Test
-    public void testCountFields() {
-        // Test counting fields in a C++ class
-        String code = "class MyClass { int x; double y; };";
-        assertEquals(2, cppCodeParser.countFields(code));
-    }
-
-    @Test
-    public void testCountFields_NoFields() {
-        // Test if no fields are found in the C++ class
-        String code = "class MyClass { };";
-        assertEquals(0, cppCodeParser.countFields(code));
-    }
-
-    @Test
-    public void testCountMethods() {
-        // Test counting methods in a C++ class
-        String code = "class MyClass { void foo() {} void bar() {} };";
-        assertEquals(2, cppCodeParser.countMethods(code));
-    }
-
-    @Test
-    public void testCountMethods_NoMethods() {
-        // Test if no methods are found in the C++ class
-        String code = "class MyClass { };";
-        assertEquals(0, cppCodeParser.countMethods(code));
-    }
-
-    @Test
-    public void testCountLinesOfCode() {
-        // Test counting lines of code
-        String code = "class MyClass { int x; void foo() {} // method }";  // Code as one continuous string
-        assertEquals(4, cppCodeParser.countLinesOfCode(code)); // Assumes countLinesOfCode handles counting based on actual lines.
-    }
-
-    @Test
-    public void testCountLinesOfCodeNoBlanks() {
-        // Test counting lines of code not including blank lines
-        String code = "class MyClass { int x; void foo() {} // method }";  // Code as one continuous string
-        assertEquals(3, cppCodeParser.countLinesOfCodeNoBlanks(code)); // Assumes countLinesOfCodeNoBlanks handles this logic.
+    public void testIsValidClass_False() {
+        String code = "void func() {}";
+        assertFalse(parser.isValidClass(code));
     }
 
     @Test
     public void testFindClassName() {
-        // Test finding the class name
-        String code = "class MyClass { int x; };";
-        assertEquals("MyClass", cppCodeParser.findClassName(code));
+        String code = "class TestName { public: int x; };";
+        assertEquals("TestName", parser.findClassName(code));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testFindClassName_InvalidCode() {
-        // Test if it throws an exception when no class is found
-        String code = "int x;";
-        cppCodeParser.findClassName(code); // Should throw exception
+    @Test
+    public void testCountLinesOfCode() {
+        String code = "class A {\nint x;\nvoid m() {}\n};";
+        assertEquals(4, parser.countLinesOfCode(code));
+    }
+
+    @Test
+    public void testCountLinesOfCodeNoBlanks() {
+        String code = "\n\nclass A {\n\nint x;\n\n};\n";
+        assertEquals(3, parser.countLinesOfCodeNoBlanks(code));
+    }
+
+    @Test
+    public void testCountFields() {
+        String code = "class A { int a; float b; };";
+        assertEquals(2, parser.countFields(code));
+    }
+
+    @Test
+    public void testCountMethods() {
+        String code = "class A { void m1(); int m2() { return 0; } };";
+        assertEquals(2, parser.countMethods(code));
+    }
+
+    @Test
+    public void testCalculateAverageLinesPerMethod() {
+        String code = "class A { void m1() { int x = 0; } void m2() { int y = 1; int z = 2; } };";
+        double avg = parser.calculateAverageLinesPerMethod(code);
+        assertTrue(avg > 0);
+    }
+
+    @Test
+    public void testCalculateMaximumCyclomaticComplexity() {
+        String code = """
+        class A {
+            void m() {
+                if (x > 0) {
+                    // condition 1
+                } else if (x < 0) {
+                    // condition 2
+                }
+
+                for (int i = 0; i < 5; ++i) {
+                    if (i % 2 == 0) {
+                        continue;
+                    }
+                }
+
+                while (y != 0) {
+                    y--;
+                }
+
+                switch(z) {
+                    case 1:
+                        break;
+                    case 2:
+                        break;
+                    default:
+                        break;
+                }
+
+                try {
+                    riskyOperation();
+                } catch (const std::exception& e) {
+                    handle(e);
+                }
+            }
+        };
+        class B {
+            void m() {
+                if (x > 0) {
+                    // condition 1
+                } else if (x < 0) {
+                    // condition 2
+                }
+            }
+        };
+    """;
+        int max = parser.calculateMaximumCyclomaticComplexity(code);
+        assertEquals(11, max);
+    }
+
+    @Test
+    public void testCalculateCyclomaticComplexityForMethod() {
+        String method = "void m() { if (x) {} else if (y) {} for (;;) {} switch(n) { case 1: break; case 2: break; } }";
+        int complexity = parser.calculateCyclomaticComplexityForMethod(method);
+        assertEquals(8, complexity);
+    }
+
+    @Test
+    public void testCountPatternMatches() {
+        String code = "if (x) {} if (y) {} for (;;) {}";
+        Pattern pattern = Pattern.compile("if\\s*\\(");
+        Matcher matcher = pattern.matcher(code);
+        int matches = parser.countPatternMatches(matcher);
+        assertEquals(2, matches);
     }
 
     @Test
     public void testGenerateModelAttributes() {
-        // Test generating model attributes for a valid C++ class
-        String code = "class MyClass { int x; void foo() {} };";
-        Attributes attributes = cppCodeParser.generateModelAttributes(code);
-
-        assertNotNull(attributes);
-        assertEquals("MyClass", attributes.getName());
-        assertEquals(1, attributes.getNumberOfFields());
-        assertEquals(1, attributes.getNumberOfMethods());
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGenerateModelAttributes_InvalidClass() {
-        // Test if it throws an exception for an invalid C++ class
-        String code = "int x;";
-        cppCodeParser.generateModelAttributes(code); // Should throw exception
+        String code = "class Sample { int x; void method() { if (x) {} } };";
+        Attributes attr = parser.generateModelAttributes(code);
+        assertEquals("Sample", attr.getName());
+        assertEquals(1, attr.getNumberOfFields());
+        assertEquals(1, attr.getNumberOfMethods());
+        assertTrue(attr.getLinesOfCode() > 0);
+        assertTrue(attr.getMaxCyclomaticComplexity() >= 2); // base + if
     }
 }

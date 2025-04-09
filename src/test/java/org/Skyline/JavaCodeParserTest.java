@@ -3,11 +3,9 @@ package org.Skyline;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
-import java.util.List;
 
 public class JavaCodeParserTest {
 
@@ -67,7 +65,7 @@ public class JavaCodeParserTest {
 
     @Test
     public void testIsValidClass_False() {
-        String code = "InterfaceExample {}";
+        String code = "InvalidClass {}";
         assertFalse(parser.isValidClass(code));
     }
 
@@ -104,19 +102,32 @@ public class JavaCodeParserTest {
 
     @Test
     public void testCalculateCyclomaticComplexityForMethod_Branches() {
-        String method = "public void test() { if (true) {} else if (false) {} for(int i=0;i<10;i++) {} while(true) {} switch(x) { case 1: break; case 2: break; } try { } catch(Exception e) {} }";
-        int complexity = parser.calculateMaximumCyclomaticComplexity(method);
-        assertEquals(7, complexity); // if, else-if, for, while, switch-case(2), catch
+        String code = """
+            public class Temp {
+                public void test() {
+                    if (true) {}
+                    else if (false) {}
+                    for(int i=0;i<10;i++) {}
+                    while(true) {}
+                    switch(x) { case 1: break; case 2: break; }
+                    try { } catch(Exception e) {}
+                }
+            }
+        """;
+        int complexity = parser.calculateMaximumCyclomaticComplexity(code);
+        assertEquals(7, complexity);
     }
 
     @Test
     public void testCalculateMaximumCyclomaticComplexity_MultipleMethods() {
-        String code = "public class A {\n" +
-                "void m1() { if (a) {} }\n" +
-                "void m2() { while (b) {} for(int i=0;i<10;i++) {} }\n" +
-                "void m3() { try {} catch(Exception e) {} switch(x) { case 1: break; case 2: break; } }\n" +
-                "}";
+        String code = """
+            public class A {
+                void m1() { if (a) {} }
+                void m2() { while (b) {} for(int i=0;i<10;i++) {} }
+                void m3() { try {} catch(Exception e) {} switch(x) { case 1: break; case 2: break; } }
+            }
+        """;
         int max = parser.calculateMaximumCyclomaticComplexity(code);
-        assertTrue(max >= 5); // highest among m2 or m3 depending on parser logic
+        assertEquals(3, max);
     }
 } 

@@ -162,4 +162,9 @@ public class SettingsState implements State {
         alert.setContentText(content);
         alert.showAndWait();
     }
+
+    //method for testing purposes
+    public void setDatabaseManager(DatabaseManager databaseManager) {
+        this.db = databaseManager;
+    }
 }

@@ -98,7 +98,7 @@ public class PythonCodeParser extends CodeParser {
         return maxCyclomaticComplexity;
     }
 
-    private int calculateCyclomaticComplexityForMethod(String methodCode) {
+    public int calculateCyclomaticComplexityForMethod(String methodCode) {
         int complexity = 1;  // Start with a base complexity of 1
 
         // Match decision points: if, for, while, and, or, elif
@@ -148,7 +148,7 @@ public class PythonCodeParser extends CodeParser {
         throw new IllegalArgumentException("Not a valid Python class!");
     }
 
-    private static String extractClassCode(String code, String className) {
+    public static String extractClassCode(String code, String className) {
         String[] lines = code.split("\\r?\\n");
         String classHeader = "class " + className;
         StringBuilder classBody = new StringBuilder();

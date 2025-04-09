@@ -14,10 +14,18 @@ public class LoginState implements State {
     private StateContext context;
     private String username;
     private String password;
-    private Label errorLabel;
+    private Label errorLabel = new Label("Error");
 
     public LoginState(StateContext context) {
         this.context = context;
+    }
+
+    // setters for testing purposes
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override

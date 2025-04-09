@@ -16,10 +16,19 @@ public class Attributes {
     private int numberOfImports = 0;
     private String classPackage = "";
 
-
-    public Attributes(String user){
+    // constructor for testing purposes
+    public Attributes(String user, int i, int i1, int i2, int i3, int i4, int i5, int i6, int i7){
         this.user = user;
+        this.linesOfCode = i;
+        this.linesOfCodeNoBlanks = i1;
+        this.numberOfFields = i2;
+        this.numberOfMethods = i3;
+        this.averageLinesPerMethod = i4;
+        this.maxCyclomaticComplexity = i5;
+        this.inheritanceDepth = i6;
+        this.numberOfAssociations = i7;
     }
+
     public Attributes(){}
 
     public String getUser() {

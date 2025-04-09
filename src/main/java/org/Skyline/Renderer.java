@@ -499,7 +499,7 @@ private Group root;
     }
 
 
-    private Box attributesToBuilding(Attributes attributes, String xParameter, String yParameter, String zParameter){
+    public Box attributesToBuilding(Attributes attributes, String xParameter, String yParameter, String zParameter){
         // Takes an attributes object and returns a building
         Box newBox = new Box();
 
@@ -510,8 +510,8 @@ private Group root;
         return newBox;
     }
 
-    private int getAttributeFromString(String attribute, Attributes attributes){
-        // Takes an parameter and Attributes object and returns the value of that parameter
+    public int getAttributeFromString(String attribute, Attributes attributes){
+        // Takes a parameter and Attributes object and returns the value of that parameter
         switch (attribute) {
             case "LINES OF CODE":
                 return attributes.getLinesOfCode();
@@ -534,6 +534,19 @@ private Group root;
             default:
                 return 1;
         }
+    }
+
+    //methods for testing purposes
+    public List<Box> rendererTestExposeCreateBuildings(Renderer r) {
+        return r.createBuildings();
+    }
+
+    private void rendererTestExposeScroll(Renderer r, ScrollEvent event, PerspectiveCamera camera) {
+        r.handleScrollGroupMovement(event, camera);
+    }
+
+    private void rendererTestExposeKey(Renderer r, KeyEvent event, Group group, PerspectiveCamera camera) {
+        r.handleGroupMovement(event, group, camera);
     }
 }
 

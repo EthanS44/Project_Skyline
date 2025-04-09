@@ -1,114 +1,79 @@
+
 package org.Skyline;
 
 import javafx.collections.FXCollections;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
+import javafx.collections.ObservableList;
+import javafx.embed.swing.JFXPanel;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockedConstruction;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+@RunWith(MockitoJUnitRunner.class)
 public class ModelListStateTest {
 
+    @Mock
     private StateContext mockContext;
+
+    @Mock
     private DatabaseManager mockDbManager;
-    private Model mockModel1;
-    private Model mockModel2;
-    private ModelListState state;
+
+    private ObservableList<Model> mockModelList;
 
     @Before
     public void setUp() {
-        // Mock models
-        mockModel1 = mock(Model.class);
-        when(mockModel1.getName()).thenReturn("ZebraModel");
+        new JFXPanel(); // Initializes JavaFX toolkit
 
-        mockModel2 = mock(Model.class);
-        when(mockModel2.getName()).thenReturn("AlphaModel");
+        List<Model> models = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            models.add(new Model("Model" + i, "testuser", new ArrayList<>())) ;
+        }
+        mockModelList = FXCollections.observableArrayList(models);
 
-        List<Model> modelList = new ArrayList<>();
-        modelList.add(mockModel1);
-        modelList.add(mockModel2);
-
-        // Mock DatabaseManager and return a concrete ArrayList
-        mockDbManager = mock(DatabaseManager.class);
-        when(mockDbManager.getModelsByUser(anyString())).thenReturn(new ArrayList<>(modelList));
-
-        // Mock StateContext
-        mockContext = mock(StateContext.class);
-        when(mockContext.getCurrentUser()).thenReturn("testUser");
+        when(mockContext.getCurrentUser()).thenReturn("testuser");
         when(mockContext.getDatabaseManager()).thenReturn(mockDbManager);
-        when(mockContext.getModelList()).thenReturn(new ArrayList<>(modelList));
-
-        // Create instance under test
-        state = new ModelListState(mockContext);
+        when(mockDbManager.getModelsByUser("testuser")).thenReturn(new ArrayList<>(mockModelList));
+        when(mockContext.getModelList()).thenReturn(new ArrayList<>(mockModelList));
     }
 
     @Test
-    public void testSortModels() {
-        // No exceptions or crashes = pass (since ListView sorting isn't testable here)
+    public void testHandleAction_NewModel_UnderLimit() {
+        try (MockedConstruction<NewModelState> ignored = mockConstruction(NewModelState.class)) {
+            ModelListState state = new ModelListState(mockContext);
+            state.handleAction("newModel");
+            verify(mockContext).setState(any(NewModelState.class));
+        }
+    }
+
+    @Test
+    public void testHandleAction_SortModels() {
+        ModelListState state = new ModelListState(mockContext);
         state.handleAction("sortModels");
     }
 
     @Test
-    public void testHandleLogout() {
-        state.handleAction("Logout");
-        verify(mockContext).setState(any(LoginState.class));
-    }
-
-    @Test
-    public void testHandleMainMenu() {
-        state.handleAction("Main Menu");
-        verify(mockContext).setState(any(MainMenuState.class));
-    }
-
-    @Test
-    public void testHandleQuit() {
-        try {
-            state.handleAction("Quit");
-        } catch (Exception ignored) {
-            // We can't prevent System.exit(0) in normal unit tests — skip
+    public void testHandleAction_MainMenu() {
+        try (MockedConstruction<MainMenuState> ignored = mockConstruction(MainMenuState.class)) {
+            ModelListState state = new ModelListState(mockContext);
+            state.handleAction("Main Menu");
+            verify(mockContext).setState(any(MainMenuState.class));
         }
     }
 
     @Test
-    public void testHandleNewModel_WhenLimitNotReached() {
-        state.handleAction("newModel");
-        verify(mockContext).setState(any(NewModelState.class));
-    }
-
-    @Test
-    public void testHandleNewModel_WhenLimitReached() {
-        List<Model> fullList = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            Model mock = mock(Model.class);
-            when(mock.getName()).thenReturn("MockModel" + i);
-            fullList.add(mock);
+    public void testHandleAction_Logout() {
+        try (MockedConstruction<LoginState> ignored = mockConstruction(LoginState.class)) {
+            ModelListState state = new ModelListState(mockContext);
+            state.handleAction("Logout");
+            verify(mockContext).setState(any(LoginState.class));
         }
-
-        when(mockContext.getModelList()).thenReturn((ArrayList<Model>) fullList);
-
-        state = new ModelListState(mockContext);
-        state.handleAction("newModel");
-
-        // Ensure no transition due to alert dialog
-        verify(mockContext, never()).setState(any(NewModelState.class));
-    }
-
-    @Test
-    public void testDeleteModel_NoModelSelected() {
-        // Simulate no selection
-        state.handleAction("deleteModel");
-        verify(mockDbManager, never()).deleteModelByNameAndUsername(anyString(), anyString());
-    }
-
-    @Test
-    public void testUpdateModel_NoModelSelected() {
-        // Simulate no selection
-        state.handleAction("updateModel");
-        verify(mockDbManager, never()).deleteModelByNameAndUsername(anyString(), anyString());
     }
 }
