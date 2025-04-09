@@ -15,6 +15,8 @@ public class LoginState implements State {
     private String username;
     private String password;
     private Label errorLabel = new Label("Error");
+    private DatabaseManager databaseManager = new DatabaseManager();
+    private PasswordManagement PasswordManagement = new PasswordManagement(databaseManager);
 
     public LoginState(StateContext context) {
         this.context = context;

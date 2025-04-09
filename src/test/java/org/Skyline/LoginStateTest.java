@@ -10,6 +10,8 @@ public class LoginStateTest {
 
     private StateContext mockContext;
     private LoginState loginState;
+    private DatabaseManager databaseManager = new DatabaseManager();
+    private PasswordManagement PasswordManagement = new PasswordManagement(databaseManager);
 
     @BeforeClass
     public static void initJavaFX() {
