@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: org.Skyline.SkylineApp
+Main-Class: org.Skyline.Launcher
 

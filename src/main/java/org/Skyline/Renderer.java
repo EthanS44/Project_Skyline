@@ -1,5 +1,6 @@
 package org.Skyline;
 
+import javafx.application.Application;
 import javafx.scene.*;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
@@ -17,10 +18,11 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 
-public class Renderer {
+public class Renderer extends Application {
 
 private final double rotationAmount = 1;
 private final double moveAmount = 200;
@@ -61,7 +63,7 @@ private Group root;
         this.context = context;
     }
 
-
+    @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
         setUp();
@@ -75,9 +77,9 @@ private Group root;
     }
 
     private void showRenderer() {
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("3D Model Viewer");
-        primaryStage.show();
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("3D Model Viewer");
+            primaryStage.show();
     }
 
     private void setUp() {
